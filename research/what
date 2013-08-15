@@ -1,0 +1,22 @@
+g|201301070104|73|104|F|31|4|0:00|42|14|1357608600|3|9|79|0|1|1|0|0|0
+#
+ 0|g|
+ 1|201301070104|gameid
+ 2|          73|Visiting
+ 3|         104|Home
+ 4|           F|status (S has 1)
+ 5|          31|? (see above: S has 1)
+ 6|           4|Quarter
+ 7|        0:00|Time
+ 8|          42|Visiting Score
+ 9|          14|Home Score
+10| 1357608600 |starttime GMT
+11|          3 |currentDown
+12|          9 |distance
+13|          79|distanceToScore
+14|          0 |drivePlays
+15|          1 |driveTotal
+16|          1 |awayTimeOuts
+17|          0 |homeTimeOuts
+18|          0 |venueId
+19|          0 |?

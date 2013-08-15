@@ -1,0 +1,25 @@
+-- DIVISIONS
+CREATE TABLE IF NOT EXISTS divs (
+    id INT PRIMARY KEY,
+    division TEXT
+    );
+
+-- MANUALLY INSERT DIVISIONS
+INSERT INTO divs VALUES ('1', 'FBS');
+INSERT INTO divs VALUES ('2', 'FCS');
+
+-- CONFERENCES
+CREATE TABLE IF NOT EXISTS confs (
+    division INTEGER,
+    id INTEGER PRIMARY KEY,
+    conference TEXT,
+    FOREIGN KEY(division) REFERENCES divs(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    );
+
+-- TEAMS
+CREATE TABLE IF NOT EXISTS teams (
+    conf INTEGER, -- link to conference id.
+    id INT PRIMARY KEY,
+    team TEXT,
+    FOREIGN KEY(conf) REFERENCES confs(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    );
