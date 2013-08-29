@@ -168,6 +168,8 @@ INSERT INTO teams VALUES ("13", "113", "Eastern Washington Eagles");
 INSERT INTO teams VALUES ("13", "115", "Idaho State Bengals");
 INSERT INTO teams VALUES ("13", "116", "Montana Grizzlies");
 INSERT INTO teams VALUES ("13", "117", "Montana State Bobcats");
+INSERT INTO teams VALUES ("14", "308", "North Dakota");
+
 INSERT INTO teams VALUES ("13", "118", "Northern Arizona Lumberjacks");
 INSERT INTO teams VALUES ("13", "310", "Northern Colorado Bears");
 INSERT INTO teams VALUES ("13", "257", "Portland State Vikings");
@@ -209,7 +211,7 @@ INSERT INTO teams VALUES ("108", "2324", "Texas College Steers");
 
 -- FCS Independents
 INSERT INTO confs VALUES ("2", "74", "FCS Independents");
--- INSERT INTO teams VALUES ("74", "", "Abilene Christian Wildcats");
+INSERT INTO teams VALUES ("74", "276", "Abilene Christian Wildcats");
 INSERT INTO teams VALUES ("74", "2595", "Charlotte 49ers");
 INSERT INTO teams VALUES ("74", "2601", "Houston Baptist Huskies");
 INSERT INTO teams VALUES ("74", "216", "Monmouth Hawks");
