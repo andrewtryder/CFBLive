@@ -168,7 +168,6 @@ INSERT INTO teams VALUES ("13", "113", "Eastern Washington Eagles");
 INSERT INTO teams VALUES ("13", "115", "Idaho State Bengals");
 INSERT INTO teams VALUES ("13", "116", "Montana Grizzlies");
 INSERT INTO teams VALUES ("13", "117", "Montana State Bobcats");
-INSERT INTO teams VALUES ("13", "309", "North Dakota State Bison");
 INSERT INTO teams VALUES ("13", "118", "Northern Arizona Lumberjacks");
 INSERT INTO teams VALUES ("13", "310", "Northern Colorado Bears");
 INSERT INTO teams VALUES ("13", "257", "Portland State Vikings");
