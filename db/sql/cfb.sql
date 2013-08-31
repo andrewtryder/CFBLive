@@ -158,31 +158,31 @@ INSERT INTO teams VALUES ("7", "66", "Washington State");
 
 -- SEC
 INSERT INTO confs VALUES("1", "8", "SEC");
-INSERT INTO teams VALUES ("8", "73", "Alabama Crimson Tide");
-INSERT INTO teams VALUES ("8", "74", "Arkansas Razorbacks");
-INSERT INTO teams VALUES ("8", "75", "Auburn Tigers");
-INSERT INTO teams VALUES ("8", "67", "Florida Gators");
-INSERT INTO teams VALUES ("8", "68", "Georgia Bulldogs");
-INSERT INTO teams VALUES ("8", "69", "Kentucky Wildcats");
-INSERT INTO teams VALUES ("8", "76", "LSU Tigers");
-INSERT INTO teams VALUES ("8", "78", "Mississippi State Bulldogs");
-INSERT INTO teams VALUES ("8", "22", "Missouri Tigers");
-INSERT INTO teams VALUES ("8", "77", "Ole Miss Rebels");
-INSERT INTO teams VALUES ("8", "70", "South Carolina Gamecocks");
-INSERT INTO teams VALUES ("8", "71", "Tennessee Volunteers");
-INSERT INTO teams VALUES ("8", "84", "Texas A&M Aggies");
-INSERT INTO teams VALUES ("8", "72", "Vanderbilt Commodores");
+INSERT INTO teams VALUES ("8", "73", "Alabama");
+INSERT INTO teams VALUES ("8", "74", "Arkansas");
+INSERT INTO teams VALUES ("8", "75", "Auburn");
+INSERT INTO teams VALUES ("8", "67", "Florida");
+INSERT INTO teams VALUES ("8", "68", "Georgia");
+INSERT INTO teams VALUES ("8", "69", "Kentucky");
+INSERT INTO teams VALUES ("8", "76", "LSU");
+INSERT INTO teams VALUES ("8", "78", "Miss St.");
+INSERT INTO teams VALUES ("8", "22", "Missouri");
+INSERT INTO teams VALUES ("8", "77", "Ole Miss");
+INSERT INTO teams VALUES ("8", "70", "South Carolina");
+INSERT INTO teams VALUES ("8", "71", "Tennessee");
+INSERT INTO teams VALUES ("8", "84", "Texas A&M");
+INSERT INTO teams VALUES ("8", "72", "Vanderbilt");
 
 -- Sun Belt
 INSERT INTO confs VALUES ("1", "90", "Sun Belt");
-INSERT INTO teams VALUES ("90", "37", "Arkansas State Red Wolves");
-INSERT INTO teams VALUES ("90", "2558", "Georgia State Panthers");
-INSERT INTO teams VALUES ("90", "45", "Louisiana-Lafayette Cajuns");
-INSERT INTO teams VALUES ("90", "103", "Louisiana-Monroe Warhawks");
-INSERT INTO teams VALUES ("90", "2549", "South Alabama Jaguars");
-INSERT INTO teams VALUES ("90", "185", "Texas State Bobcats");
-INSERT INTO teams VALUES ("90", "222", "Troy Trojans");
-INSERT INTO teams VALUES ("90", "224", "Western Kentucky Hilltoppers");
+INSERT INTO teams VALUES ("90", "37", "Arkansas St.");
+INSERT INTO teams VALUES ("90", "2558", "Georgia St.");
+INSERT INTO teams VALUES ("90", "45", "Louisiana-Lafayette");
+INSERT INTO teams VALUES ("90", "103", "Louisiana-Monroe");
+INSERT INTO teams VALUES ("90", "2549", "South Alabama");
+INSERT INTO teams VALUES ("90", "185", "Texas State");
+INSERT INTO teams VALUES ("90", "222", "Troy");
+INSERT INTO teams VALUES ("90", "224", "Western Kentucky");
 
 -----------------------
 -- NON FBS ARE BELOW --
