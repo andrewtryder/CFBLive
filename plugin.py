@@ -57,19 +57,19 @@ class CFBLive(callbacks.Plugin):
         self.fetchhost = None
         self.fetchhostcheck = None
         # fill in the blanks.
-        #if not self.games:
-        #    self.games = self._fetchgames()
+        if not self.games:
+            self.games = self._fetchgames()
         # now schedule our events.
-        #def checkcfbcron():
-        #    self.checkcfb(irc)
-        #try: # check scores.
-        #    schedule.addPeriodicEvent(checkcfbcron, 20, now=False, name='checkcfb')
-        #except AssertionError:
-        #    try:
-        #        schedule.removeEvent('checkcfb')
-        #    except KeyError:
-        #        pass
-        #    schedule.addPeriodicEvent(checkcfbcron, 20, now=False, name='checkcfb')
+        def checkcfbcron():
+            self.checkcfb(irc)
+        try: # check scores.
+            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
+        except AssertionError:
+            try:
+                schedule.removeEvent('checkcfb')
+            except KeyError:
+                pass
+            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
 
     def die(self):
         #try:
@@ -514,13 +514,13 @@ class CFBLive(callbacks.Plugin):
 
     cfblivestatus = wrap(cfblivestatus)
 
-    #def checkcfb(self, irc):
-    def checkcfb(self, irc, msg, args):
+    def checkcfb(self, irc):
+    #def checkcfb(self, irc, msg, args):
         """
         Main loop.
         """
 
-        #self.log.info("checkcfb: starting...")
+        self.log.info("checkcfb: starting...")
         # before anything, check if nextcheck is set and is in the future.
         if self.nextcheck:  # set
             utcnow = self._utcnow()
@@ -635,7 +635,7 @@ class CFBLive(callbacks.Plugin):
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
                         if (int(games2[k]['quarter']) > 4):
-                            fot = "F/OT{0}".format(int(games2[k]['statusperiod'])-4)
+                            fot = "F/OT{0}".format(int(games2[k]['quarter'])-4)
                             mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor(fot, 'red'))
                         else:
                             mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor("F", 'red'))
@@ -687,7 +687,7 @@ class CFBLive(callbacks.Plugin):
             self.nextcheck = utcnow+600  # 10 minutes from now.
             self.log.info("checkcfb: no active games and I have not got new games yet, so I am holding off for 10 minutes.")
 
-    checkcfb = wrap(checkcfb)
+    #checkcfb = wrap(checkcfb)
 
 Class = CFBLive
 
