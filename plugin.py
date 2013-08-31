@@ -432,7 +432,7 @@ class CFBLive(callbacks.Plugin):
     cfbstop = wrap(cfbstop, [('checkCapability', 'admin')])
 
     def cfbchannel(self, irc, msg, args, op, optchannel, optarg):
-        """<add|list|del|confs> <#channel> <ALL|CONFERENCE>
+        """<add|list|del|confs> <#channel> <CONFERENCE>
 
         Add or delete conference(s) from a specific channel's output.
         Use conference name or ALL for everything. Can only specify one at a time.
@@ -503,7 +503,7 @@ class CFBLive(callbacks.Plugin):
 
         if len(self.channels) != 0:
             irc.reply("CHANNELS: {0}".format(self.channels))
-
+        irc.reply("NEXTCHECK: {0}".format(self.nextcheck))
         games = self._fetchgames()
         if games:
             for (k, v) in games.items():
