@@ -566,15 +566,24 @@ class CFBLive(callbacks.Plugin):
                             if se['id'] in self.dupedict[k]:  # it's been posted.
                                 self.log.info("checkcfb: I'm trying to repost scoring event {0} from {1}".format(se['id'], k))
                             else:  # we have NOT posted it yet. lets format for output.
-                                # get the score diff so we can figure out the score type.
-                                pdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))+abs((int(v['homescore'])-int(games2[k]['homescore'])))
-                                setype = self._scoretype(pdiff)  # get the score event type.
-                                # rest of the string.
+                                # first, grab the teams.
                                 at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                                 ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                                # get the score diff so we can figure out the score type and who scored.
+                                apdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))  # awaypoint diff.
+                                hpdiff = abs((int(v['homescore'])-int(games2[k]['homescore'])))  # homepoint diff.
+                                if apdiff != 0:  # awayscore is not 0, ie: awayteam scored.
+                                    sediff = apdiff  # int
+                                    seteam = at  # get awayteam.
+                                    setype = self._scoretype(apdiff)  # score type.
+                                else:  # hometeam scored.
+                                    sediff = hpdiff  # int
+                                    seteam = ht  # get awayteam.
+                                    setype = self._scoretype(hpdiff)  # score type.
+                                # rest of the string.
                                 gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
                                 scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
-                                mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, setype, se['event'], scoretime)  # lets construct the string.
+                                mstr = "{0} :: {1} :: {2} :: {3} ({4})".format(gamestr, setype, seteam, se['event'], scoretime)  # lets construct the string.
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                                 self.dupedict[k].add(se['id'])  # add to dupedict.
                         else:  # scoring event did not work.
