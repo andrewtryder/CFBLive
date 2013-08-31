@@ -62,7 +62,7 @@ class CFBLive(callbacks.Plugin):
         # now schedule our events.
         def checkcfbcron():
             self.checkcfb(irc)
-        try: # check scores.
+        try:
             schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
         except AssertionError:
             try:
@@ -72,10 +72,10 @@ class CFBLive(callbacks.Plugin):
             schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
 
     def die(self):
-        #try:
-        #    schedule.removeEvent('checkcfb')
-        #except KeyError:
-        #    pass
+        try:
+            schedule.removeEvent('checkcfb')
+        except KeyError:
+            pass
         self.__parent.die()
 
     ######################
