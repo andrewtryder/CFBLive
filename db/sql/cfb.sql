@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS teams (
 INSERT INTO divs VALUES ('1', 'FBS');
 INSERT INTO divs VALUES ('2', 'FCS');
 -- American Athletic
-INSERT INTO confs VALUES ("1", "2", "American Athletic");
+INSERT INTO confs VALUES ("1", "2", "AAC");
 INSERT INTO teams VALUES ("2", "98", "Cincinnati", "ccj");
 INSERT INTO teams VALUES ("2", "202", "UConn", "ccq");
 INSERT INTO teams VALUES ("2", "80", "Houston", "hhe");
@@ -68,7 +68,7 @@ INSERT INTO teams VALUES ("71", "86", "Texas Tech", "tto");
 INSERT INTO teams VALUES ("71", "17", "WVU", "wwh");
 
 -- Big 10
-INSERT INTO confs VALUES ("1", "4", "Big Ten");
+INSERT INTO confs VALUES ("1", "4", "Big 10");
 INSERT INTO teams VALUES ("4", "26", "Illinois", "iic");
 INSERT INTO teams VALUES ("4", "27", "Indiana", "iie");
 INSERT INTO teams VALUES ("4", "28", "Iowa", "iig");
@@ -126,7 +126,7 @@ INSERT INTO teams VALUES ("6", "55", "Toledo", "ttp");
 INSERT INTO teams VALUES ("6", "56", "W. Michigan", "wwl");
 
 -- Mountain West
-INSERT INTO confs VALUES ("1", "87", "Mountain West");
+INSERT INTO confs VALUES ("1", "87", "MWC");
 INSERT INTO teams VALUES ("87", "87", "Air Force", "aab");
 INSERT INTO teams VALUES ("87", "112", "Boise St.", "bbe");
 INSERT INTO teams VALUES ("87", "89", "Colorado St.", "cco");
@@ -213,7 +213,7 @@ INSERT INTO teams VALUES ("92", "354", "Presbyterian", "ppg");
 INSERT INTO teams VALUES ("92", "178", "VMI", "vve");
 
 -- CAA
-INSERT INTO confs VALUES ("2", "98", "Colonial Athletic Association");
+INSERT INTO confs VALUES ("2", "98", "CAA");
 INSERT INTO teams VALUES ("73", "546", "Albany", "aag");
 INSERT INTO teams VALUES ("73", "195", "Delaware", "ddc");
 INSERT INTO teams VALUES ("73", "196", "JMU", "jjb");
@@ -331,7 +331,7 @@ INSERT INTO teams VALUES ("104", "2544", "Walsh", "");
 INSERT INTO teams VALUES ("104", "429", "William Penn", "");
 
 -- Missouri Valley
-INSERT INTO confs VALUES ("2", "14", "Missouri Valley");
+INSERT INTO confs VALUES ("2", "14", "MVC");
 INSERT INTO teams VALUES ("14", "121", "Illinois St.", "iid");
 INSERT INTO teams VALUES ("14", "122", "Indiana St.", "iif");
 INSERT INTO teams VALUES ("14", "125", "Missouri St.", "ssu");
@@ -354,7 +354,7 @@ INSERT INTO teams VALUES ("73", "219", "St. Francis (PA)", "sps");
 INSERT INTO teams VALUES ("73", "223", "Wagner", "wwa");
 
 -- Ohio Valley
-INSERT INTO confs VALUES ("2", "18", "Ohio Valley");
+INSERT INTO confs VALUES ("2", "18", "OVC");
 INSERT INTO teams VALUES ("18", "150", "Austin Peay", "aas");
 INSERT INTO teams VALUES ("18", "120", "E. Illinois", "eed");
 INSERT INTO teams VALUES ("18", "151", "E. Kentucky", "eee");
