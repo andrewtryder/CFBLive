@@ -51,6 +51,8 @@ class CFBLive(callbacks.Plugin):
         # initial states for games.
         self.games = None
         self.nextcheck = None
+        # dupedict.
+        self.dupedict = {}
         # fetchhost system.
         self.fetchhost = None
         self.fetchhostcheck = None
@@ -83,7 +85,7 @@ class CFBLive(callbacks.Plugin):
     def _httpget(self, url):
         """General HTTP resource fetcher."""
 
-        self.log.info(url)
+        # self.log.info(url)
 
         try:
             h = {"User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:17.0) Gecko/20100101 Firefox/17.0"}
@@ -370,8 +372,8 @@ class CFBLive(callbacks.Plugin):
             return None
         # now return process scorelines.
         lastline = scorelines[-1]  # grab the last item in scorelines list.
-        ev = lastline[10]  # event is always at 10.
-        return ev.encode('utf-8')
+        ev = {'id':lastline[2], 'event':lastline[10].encode('utf-8')}  # id is 2, event itself is 10.
+        return ev
 
     def _boldleader(self, awayteam, awayscore, hometeam, homescore):
         """Conveinence function to bold the leader."""
@@ -476,7 +478,7 @@ class CFBLive(callbacks.Plugin):
             else:
                 irc.reply("ERROR: I do not have {0} in {1}".format(optarg, optchannel))
 
-    cfbchannel = wrap(cfbchannel, [('checkCapability', 'admin'), ('somethingWithoutSpaces'), optional('channel'), optional('somethingWithoutSpaces')])
+    cfbchannel = wrap(cfbchannel, [('checkCapability', 'admin'), ('somethingWithoutSpaces'), optional('channel'), optional('text')])
 
     ###################
     # PUBLIC COMMANDS #
@@ -532,89 +534,115 @@ class CFBLive(callbacks.Plugin):
             return
 
         # main handler for event changes.
-        # NOTES
-        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final ?
-        # t['awayteam'], t['hometeam'], t['status'], t['quarter'], t['time'], t['awayscore'], t['homescore'], t['start'], t['yrdstoscore']
+        # NOTES:
+        # t['awayteam'], t['hometeam'], t['status'], t['quarter'], t['time'], t['awayscore'], t['homescore'], t['start']
         # we go through and have to match specific conditions based on changes.
         for (k, v) in games1.items():  # iterate over games.
             if k in games2:  # must mate keys between games1 and games2.
                 # ACTIVE GAME EVENTS HERE
                 if ((v['status'] == "P") and (games2[k]['status'] == "P")):
+                    # make sure the event is dupedict so we can print events.
+                    if k not in self.dupedict:
+                        self.dupedict[k] = set([])  # add.
                     # SCORING PLAY.
                     if ((games2[k]['awayscore'] > v['awayscore']) or (games2[k]['homescore'] > v['homescore'])):
                         self.log.info("Should post scoring event from {0}".format(k))
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
-                        gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
-                        scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])
-                        # try and fetch scoring event.
+                        # now lets try and fetch the scoring event.
                         se = self._scoreevent(v['hometeam'])
                         if se:  # we got scoringevent back.
-                            mstr = "{0} :: {1} ({2})".format(gamestr, se, scoretime)
+                            # make sure this event has not been posted yet.
+                            if se['id'] in self.dupedict[k]:  # it's been posted.
+                                self.log.info("checkcfb: I'm trying to repost scoring event {0} from {1}".format(se['id'], k))
+                            else:  # we have NOT posted it yet.
+                                at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                                ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                                gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
+                                scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
+                                mstr = "{0} :: {1} ({2})".format(gamestr, se['event'], scoretime)  # lets construct the string.
+                                self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
+                                self.dupedict[k].add(se['id'])  # add to dupedict.
                         else:  # scoring event did not work.
-                            mstr = "{0} :: scoring event (no details) ({1})".format(gamestr, scoretime)
-                        # now try and post.
-                        self._post(irc, v['awayteam'], v['hometeam'], mstr)
+                            self.log.info("checkcfb: ERROR :: I could not get back a scoring event from: {0}".format(k))
                     # HALFTIME IN
-                    if ((v['time'] != games2[k]['time']) and (v['quarter'] != games2[k]['quarter']) and (games2[k]['quarter'] == "2") and (games2[k]['time'] == "0:00")):
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
+                    if ((v['quarter'] != games2[k]['quarter']) and (v['time'] != games2[k]['time']) and (games2[k]['quarter'] == "2") and (games2[k]['time'] == "0:00")):
+                        self.log.info("Should fire halftime in {0}".format(k))
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
                         mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor("HALFTIME", 'yellow'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # HALFTIME OUT
                     if ((v['quarter'] != games2[k]['quarter']) and (v['time'] != games2[k]['time']) and (games2[k]['quarter'] == "3") and (games2[k]['time'] == "15:00")):
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
+                        self.log.info("Should fire 3rd quarter in {0}".format(k))
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
                         mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor("Start 3rd Qtr", 'green'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # OT NOTIFICATION
-                    # if ((v['quarter'] != games2[k]['quarter']) and (int(games2[k]['quarter']) > 4 )):
-                    # otper = "Start OT{0}".format(int(ev['statusperiod'])-4)  # should start with 5, which is OT1.
-                    # at = self._tidwrapper(v['awayteam'])
-                    # ht = self._tidwrapper(v['hometeam'])
-                    # gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
-                    # mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor(otper, 'green'))
-                    # self._post(irc, v['awayteam'], v['hometeam'], mstr)
+                    if ((v['quarter'] != games2[k]['quarter']) and (int(games2[k]['quarter']) > 4)):
+                        self.log.info("Should fire OT notification in {0}".format(k))
+                        otper = "Start OT{0}".format(int(ev['statusperiod'])-4)  # should start with 5, which is OT1.
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                        gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
+                        mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor(otper, 'green'))
+                        self._post(irc, v['awayteam'], v['hometeam'], mstr)
                 # EVENTS OUTSIDE OF AN ACTIVE GAME.
                 else:
                     # KICKOFF.
                     if ((v['status'] == "S") and (games2[k]['status'] == "P")):
                         self.log.info("{0} is kicking off.".format(k))
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
+                        # add game into dupedict.
+                        if k not in self.dupedict:
+                            self.dupedict[k] = set([])
+                        else:
+                            self.log.info("checkcfb: kickoff: I tried to readd {0} to dupedict".format(k))
+                        # now construct kickoff event.
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         mstr = "{0}@{1} :: {2}".format(at, ht, ircutils.mircColor("KICKOFF", 'green'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # GAME GOES FINAL.
-                    elif ((v['status'] == "P") and (games2[k]['status'] == "F")):
+                    if ((v['status'] == "P") and (games2[k]['status'] == "F")):
                         self.log.info("{0} is going final.".format(k))
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
-                        gamestr = self._boldleader(at, v['awayscore'], ht, v['homescore'])
-                        mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor("FINAL", 'red'))
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                        gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
+                        if (int(games2[k]['quarter']) > 4):
+                            fot = "F/OT{0}".format(int(games2[k]['statusperiod'])-4)
+                            mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor(fot, 'red'))
+                        else:
+                            mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor("F", 'red'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
-                    elif ((v['status'] == "P") and (games2[k]['status'] == "D")):
+                        # lets now try to remove from dupedict.
+                        if k in self.dupedict:
+                            del self.dupedict[k]  # delete.
+                        else:
+                            self.log.info("checkcfb: {0} went final but was not in dupedict".format(k))
+                    # GAME GOES INTO A DELAY.
+                    if ((v['status'] == "P") and (games2[k]['status'] == "D")):
                         self.log.info("{0} is going into delay.".format(k))
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         mstr = "{0}@{1} :: {2}".format(at, ht, ircutils.mircColor("DELAY", 'yellow'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
-                    elif ((v['status'] == "D") and (games2[k]['status'] == "P")):
+                    # GAME COMES OUT OF A DELAY.
+                    if ((v['status'] == "D") and (games2[k]['status'] == "P")):
                         self.log.info("{0} is resuming from delay.".format(k))
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         mstr = "{0}@{1} :: {2}".format(at, ht, ircutils.mircColor("RESUMED", 'green'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
 
         # done checking. copy new to self.games
         self.games = games2 # change status.
         # last, before we reset to check again, we need to verify some states of games in order to set sentinel or not.
+        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final ?
         # first, we grab all the statuses in newgames (games2)
         gamestatuses = set([i['status'] for i in games2.values()])
         # next, check what the statuses of those games are and act accordingly.
         if (('D' in gamestatuses) or ('P' in gamestatuses)): # if any games are being played or in a delay, act normal.
-            #self.log.info("Acting normal because D or P.")
             self.nextcheck = None # set to None to make sure we're checking on normal time.
         elif 'S' in gamestatuses:  # no games being played or in delay, but we have games in the future. (ie: day games done but night games later)
             firstgametime = sorted([f['start'] for (i, f) in games2.items() if f['status'] == "S"])[0]  # get all start times with S, first (earliest).
