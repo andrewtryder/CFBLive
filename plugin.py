@@ -385,6 +385,18 @@ class CFBLive(callbacks.Plugin):
         else:  # tie.
             return "{0} {1} {2} {3}".format(awayteam, awayscore, hometeam, homescore)
 
+    def _scoretype(self, pd):
+        """Return score event type based on the difference in points."""
+
+        if pd in (1, 2):  # 1 and 2 pt safety.
+            return "SAF"
+        elif pd == 3:  # fg.
+            return "FG"
+        elif pd in (6, 7, 8):  # td.
+            return "TD"
+        else:  # rutroh.
+            return "UNK"
+
     ######################
     # CHANNEL MANAGEMENT #
     ######################
@@ -508,7 +520,7 @@ class CFBLive(callbacks.Plugin):
         Main loop.
         """
 
-        self.log.info("checkcfb: starting...")
+        #self.log.info("checkcfb: starting...")
         # before anything, check if nextcheck is set and is in the future.
         if self.nextcheck:  # set
             utcnow = self._utcnow()
@@ -553,18 +565,31 @@ class CFBLive(callbacks.Plugin):
                             # make sure this event has not been posted yet.
                             if se['id'] in self.dupedict[k]:  # it's been posted.
                                 self.log.info("checkcfb: I'm trying to repost scoring event {0} from {1}".format(se['id'], k))
-                            else:  # we have NOT posted it yet.
+                            else:  # we have NOT posted it yet. lets format for output.
+                                # get the score diff so we can figure out the score type.
+                                pdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))+abs((int(v['homescore'])-int(games2[k]['homescore'])))
+                                setype = self._scoretype(pdiff)  # get the score event type.
+                                # rest of the string.
                                 at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                                 ht = self._tidwrapper(v['hometeam'])  # fetch home.
                                 gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
                                 scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
-                                mstr = "{0} :: {1} ({2})".format(gamestr, se['event'], scoretime)  # lets construct the string.
+                                mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, setype, se['event'], scoretime)  # lets construct the string.
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                                 self.dupedict[k].add(se['id'])  # add to dupedict.
                         else:  # scoring event did not work.
                             self.log.info("checkcfb: ERROR :: I could not get back a scoring event from: {0}".format(k))
+                    # END OF 1ST AND 3RD QUARTER.
+                    if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] in ("1", "3")) and (games2[k]['time'] == "0:00")):
+                        self.log.info("Should end of quarter in {0}".format(k))
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                        gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
+                        qtrstr = "End of {0} qtr".format(utils.str.ordinal(games2[k]['quarter']))
+                        mstr = "{0} :: {1}".format(gamestr, ircutils.mircColor(qtrstr, 'red'))
+                        self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # HALFTIME IN
-                    if ((v['quarter'] != games2[k]['quarter']) and (v['time'] != games2[k]['time']) and (games2[k]['quarter'] == "2") and (games2[k]['time'] == "0:00")):
+                    if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] == "2") and (games2[k]['time'] == "0:00")):
                         self.log.info("Should fire halftime in {0}".format(k))
                         at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.

@@ -26,6 +26,5 @@ def configure(advanced):
 
 CFBLive = conf.registerPlugin('CFBLive')
 conf.registerGlobalValue(CFBLive, 'logURLs', registry.Boolean(True, """Should we log all URL calls?"""))
-conf.registerGlobalValue(CFBLive, 'checkInterval', registry.NonNegativeInteger(10, """Positive Integer in seconds to check."""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
