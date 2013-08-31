@@ -254,6 +254,22 @@ class CFBLive(callbacks.Plugin):
         else:
             return None
 
+    def _tidtoconf(self, tid):
+        """Fetch what conference a team is in."""
+
+        with sqlite3.connect(self._cfbdb) as conn:
+            cursor = conn.cursor()
+            query = "SELECT conf FROM teams WHERE id=?"
+            cursor.execute(query, (tid,))
+            confid = cursor.fetchone()[0]
+            # now grab the conf.
+            cursor = conn.cursor()
+            query = "SELECT conference FROM confs WHERE id=?"
+            cursor.execute(query, (confid,))
+            conf = cursor.fetchone()[0]
+        # now return
+        return conf.encode('utf-8')
+
     def _confidtoname(self, confid):
         """Validate a conf and return its ID."""
 
@@ -559,35 +575,35 @@ class CFBLive(callbacks.Plugin):
                     # SCORING PLAY.
                     if ((games2[k]['awayscore'] > v['awayscore']) or (games2[k]['homescore'] > v['homescore'])):
                         self.log.info("Should post scoring event from {0}".format(k))
-                        # now lets try and fetch the scoring event.
+                        # first, get some basics.
+                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                        # get the score diff so we can figure out the score type and who scored.
+                        apdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))  # awaypoint diff.
+                        hpdiff = abs((int(v['homescore'])-int(games2[k]['homescore'])))  # homepoint diff.
+                        if apdiff != 0:  # awayscore is not 0, ie: awayteam scored.
+                            #sediff = apdiff  # int
+                            seteam = at  # get awayteam.
+                            setype = self._scoretype(apdiff)  # score type.
+                        else:  # hometeam scored.
+                            #sediff = hpdiff  # int
+                            seteam = ht  # get awayteam.
+                            setype = self._scoretype(hpdiff)  # score type.
+                        # rest of the string.
+                        gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
+                        scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
                         se = self._scoreevent(v['hometeam'])
                         if se:  # we got scoringevent back.
                             # make sure this event has not been posted yet.
                             if se['id'] in self.dupedict[k]:  # it's been posted.
                                 self.log.info("checkcfb: I'm trying to repost scoring event {0} from {1}".format(se['id'], k))
                             else:  # we have NOT posted it yet. lets format for output.
-                                # first, grab the teams.
-                                at = self._tidwrapper(v['awayteam'])  # fetch visitor.
-                                ht = self._tidwrapper(v['hometeam'])  # fetch home.
-                                # get the score diff so we can figure out the score type and who scored.
-                                apdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))  # awaypoint diff.
-                                hpdiff = abs((int(v['homescore'])-int(games2[k]['homescore'])))  # homepoint diff.
-                                if apdiff != 0:  # awayscore is not 0, ie: awayteam scored.
-                                    sediff = apdiff  # int
-                                    seteam = at  # get awayteam.
-                                    setype = self._scoretype(apdiff)  # score type.
-                                else:  # hometeam scored.
-                                    sediff = hpdiff  # int
-                                    seteam = ht  # get awayteam.
-                                    setype = self._scoretype(hpdiff)  # score type.
-                                # rest of the string.
-                                gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
-                                scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
                                 mstr = "{0} :: {1} :: {2} :: {3} ({4})".format(gamestr, setype, seteam, se['event'], scoretime)  # lets construct the string.
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                                 self.dupedict[k].add(se['id'])  # add to dupedict.
-                        else:  # scoring event did not work.
-                            self.log.info("checkcfb: ERROR :: I could not get back a scoring event from: {0}".format(k))
+                        else:  # scoring event did not work. just post a generic string.
+                            mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, setype, seteam, scoretime)
+                            self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                     # END OF 1ST AND 3RD QUARTER.
                     if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] in ("1", "3")) and (games2[k]['time'] == "0:00")):
                         self.log.info("Should end of quarter in {0}".format(k))
@@ -635,7 +651,9 @@ class CFBLive(callbacks.Plugin):
                         # now construct kickoff event.
                         at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.
-                        mstr = "{0}@{1} :: {2}".format(at, ht, ircutils.mircColor("KICKOFF", 'green'))
+                        atconf = self._tidtoconf(v['awayteam'])  # fetch visitor conf.
+                        htconf = self._tidtoconf(v['hometeam'])  # fetch hometeam conf.
+                        mstr = "{0}({1}) @ {2}({3}) :: {4}".format(at, atconf, ht, htconf, ircutils.mircColor("KICKOFF", 'green'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # GAME GOES FINAL.
                     if ((v['status'] == "P") and (games2[k]['status'] == "F")):
