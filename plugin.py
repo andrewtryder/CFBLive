@@ -671,7 +671,7 @@ class CFBLive(callbacks.Plugin):
                     # OT NOTIFICATION
                     if ((v['quarter'] != games2[k]['quarter']) and (int(games2[k]['quarter']) > 4)):
                         self.log.info("Should fire OT notification in {0}".format(k))
-                        otper = "Start OT{0}".format(int(ev['quarter'])-4)  # should start with 5, which is OT1.
+                        otper = "Start OT{0}".format(int(games2[k]['quarter'])-4)  # should start with 5, which is OT1.
                         at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
