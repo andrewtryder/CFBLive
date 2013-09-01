@@ -9,8 +9,6 @@
 from base64 import b64decode
 import cPickle as pickle
 import datetime
-#from operator import itemgetter
-#import re
 from BeautifulSoup import BeautifulSoup
 import sqlite3
 import os.path
@@ -56,6 +54,9 @@ class CFBLive(callbacks.Plugin):
         # fetchhost system.
         self.fetchhost = None
         self.fetchhostcheck = None
+        # rankings.
+        self.rankings = {}
+        self.rankingstimer = None
         # fill in the blanks.
         if not self.games:
             self.games = self._fetchgames()
@@ -180,7 +181,7 @@ class CFBLive(callbacks.Plugin):
             url = b64decode('aHR0cDovL20ueWFob28uY29tL3cvc3BvcnRzL25jYWFmL3RlYW0v') + 'ncaaf.t.%s' % str(tid)
             html = self._httpget(url)
             if not html:
-                self.log.error("ERROR: _tidwrapper: Could not fetch {0} :: {1}".format(url, e))
+                self.log.error("ERROR: _tidwrapper: Could not fetch {0}".format(url))
                 return None
             # try and grab teamname.
             soup = BeautifulSoup(html, convertEntities=BeautifulSoup.HTML_ENTITIES, fromEncoding='utf-8')
@@ -206,13 +207,20 @@ class CFBLive(callbacks.Plugin):
 
         with sqlite3.connect(self._cfbdb) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT team FROM teams WHERE id=?", (tid,))
+            cursor.execute("SELECT team, tid FROM teams WHERE id=?", (tid,))
             row = cursor.fetchone()
         # now return the name.
-        if not row:
+        if not row:  # didn't find.
             return None
-        else:
-            return row[0].encode('utf-8')
+        else:  # did find.
+            if row[1] != '':  # some are empty. we did get something back.
+                # check if team is in rankings dict.
+                if row[1] in self.rankings:  # in there so append the #.
+                    return "({0}){1}".format(self.rankings[row[1]], row[0].encode('utf-8'))
+                else:  # not in the table so just return the teamname.
+                    return row[0].encode('utf-8')
+            else:  # return just the team.
+                return row[0].encode('utf-8')
 
     def _tidstoconfids(self, tid1, tid2):
         """Fetch the conference ID for a team."""
@@ -374,7 +382,7 @@ class CFBLive(callbacks.Plugin):
         # now fetch the url.
         html = self._httpget(url)
         if not html:
-            self.log.error("ERROR: Could not fetch {0} :: {1}".format(url, e))
+            self.log.error("ERROR: Could not fetch {0} :: {1}".format(url))
             return None
         # process.
         lines = html.splitlines()
@@ -411,7 +419,38 @@ class CFBLive(callbacks.Plugin):
         elif pd in (6, 7, 8):  # td.
             return "TD"
         else:  # rutroh.
+            self.log.info("_scoretype: something sent me {0}".format(pd))
             return "UNK"
+
+    def _rankings(self):
+        """Fetch the AP/BCS rankings for display."""
+
+        # first, we need the time.
+        utcnow = self._utcnow()
+        # now determine if we should repopulate.
+        if ((len(self.rankings) == 0) or (not self.rankingstimer) or (utcnow > self.rankingstimer)):
+            url = 'http://sports.yahoo.com/ncaa/football/polls?poll=1'
+            # url = b64decode('aHR0cDovL3Nwb3J0cy55YWhvby5jb20vbmNhYS9mb290YmFsbC9wb2xscz9wb2xsPTE=')
+            # fetch url
+            html = self._httpget(url)
+            if not html:
+                self.log.error("ERROR: Could not fetch {0}".format(url))
+                self.rankingstimer = utcnow+60
+                self.log.info("_rankings: html failed")
+            try:  # parse the table and populate.
+                soup = BeautifulSoup(html)
+                table = soup.find('table', attrs={'id':'ysprankings-results-table'})
+                rows = table.findAll('tr')[1:26]  # just to make sure.
+                for i, row in enumerate(rows):
+                    team = row.find('a')['href'].split('/')[5]  # find the team abbr.
+                    self.rankings[team] = i+1  # populate dict.
+                # now finalize.
+                self.rankingstimer = utcnow+86400 # 24hr.
+                self.log.info("_rankings: updated rankings.")
+            except Exception, e:  # something went wrong.
+                self.log.error("_rankings: ERROR: {0}".format(e))
+                self.rankingstimer = utcnow+60  # rerun in one minute.
+                self.log.info("_rankings: exception")
 
     ######################
     # CHANNEL MANAGEMENT #
@@ -520,9 +559,9 @@ class CFBLive(callbacks.Plugin):
         if len(self.channels) != 0:
             irc.reply("CHANNELS: {0}".format(self.channels))
         irc.reply("NEXTCHECK: {0}".format(self.nextcheck))
-        games = self._fetchgames()
-        if games:
-            for (k, v) in games.items():
+        irc.reply("RANKINGS: {0}".format(self.rankings))
+        if self.games:
+            for (k, v) in self.games.items():
                 if v['status'] == "P":
                     at = self._tidwrapper(v['awayteam'])
                     ht = self._tidwrapper(v['hometeam'])
@@ -561,9 +600,9 @@ class CFBLive(callbacks.Plugin):
             self.log.error("checkcfb: fetching games2 failed.")
             return
 
+        # before we run the main event handler, make sure we have rankings.
+        self._rankings()
         # main handler for event changes.
-        # NOTES:
-        # t['awayteam'], t['hometeam'], t['status'], t['quarter'], t['time'], t['awayscore'], t['homescore'], t['start']
         # we go through and have to match specific conditions based on changes.
         for (k, v) in games1.items():  # iterate over games.
             if k in games2:  # must mate keys between games1 and games2.
@@ -601,7 +640,7 @@ class CFBLive(callbacks.Plugin):
                                 mstr = "{0} :: {1} :: {2} :: {3} ({4})".format(gamestr, setype, seteam, se['event'], scoretime)  # lets construct the string.
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                                 self.dupedict[k].add(se['id'])  # add to dupedict.
-                        else:  # scoring event did not work. just post a generic string.
+                        else:  # scoring event did not work. just post a generic string. this could be buggy.
                             mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, setype, seteam, scoretime)
                             self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                     # END OF 1ST AND 3RD QUARTER.
@@ -632,7 +671,7 @@ class CFBLive(callbacks.Plugin):
                     # OT NOTIFICATION
                     if ((v['quarter'] != games2[k]['quarter']) and (int(games2[k]['quarter']) > 4)):
                         self.log.info("Should fire OT notification in {0}".format(k))
-                        otper = "Start OT{0}".format(int(ev['statusperiod'])-4)  # should start with 5, which is OT1.
+                        otper = "Start OT{0}".format(int(ev['quarter'])-4)  # should start with 5, which is OT1.
                         at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
