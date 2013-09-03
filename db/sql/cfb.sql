@@ -184,8 +184,20 @@ INSERT INTO teams VALUES ("90", "222", "Troy", "ttv");
 INSERT INTO teams VALUES ("90", "224", "W. Kentucky", "wwk");
 
 -----------------------
--- NON FBS ARE BELOW --
+-- NON-FBS ARE BELOW --
 -----------------------
+
+-- American Southwest
+INSERT INTO confs VALUES ("2", "93", "American Southwest");
+INSERT INTO teams VALUES ("93", "736", "E. Texas Baptist", "");
+INSERT INTO teams VALUES ("93", "366", "Hardin-Simmons", "");
+INSERT INTO teams VALUES ("93", "367", "Howard Payne", "");
+INSERT INTO teams VALUES ("93", "2469", "Louisiana Col.", "");
+INSERT INTO teams VALUES ("93", "2352", "Mary Hardin-Baylor", "");
+INSERT INTO teams VALUES ("93", "368", "McMurry Univ.", "");
+INSERT INTO teams VALUES ("93", "2008", "Mississippi Col.", "");
+INSERT INTO teams VALUES ("93", "370", "Sul Ross St.", "");
+INSERT INTO teams VALUES ("93", "2537", "Texas Lutheran", "");
 
 -- Big Sky
 INSERT INTO confs VALUES ("2", "13", "Big Sky");
@@ -226,6 +238,21 @@ INSERT INTO teams VALUES ("73", "221", "Towson", "ttq");
 INSERT INTO teams VALUES ("73", "199", "Villanova", "vvh");
 INSERT INTO teams VALUES ("73", "200", "William & Mary", "wwn");
 
+-- CIAA
+INSERT INTO confs VALUES ("2", "25", "CIAA");
+INSERT INTO teams VALUES ("25", "226", "Bowie St.", "");
+INSERT INTO teams VALUES ("25", "2007", "Chowan", "");
+INSERT INTO teams VALUES ("25", "227", "Elizabeth City St.", "");
+INSERT INTO teams VALUES ("25", "228", "Fayetteville St.", "");
+INSERT INTO teams VALUES ("25", "230", "Johnson C. Smith", "");
+INSERT INTO teams VALUES ("25", "2467", "Lincoln Univ. (PA)", "");
+INSERT INTO teams VALUES ("25", "231", "Livingstone", "");
+INSERT INTO teams VALUES ("25", "2333", "Shaw", "");
+INSERT INTO teams VALUES ("25", "2330", "St. Augustine's", "");
+INSERT INTO teams VALUES ("25", "2337", "St. Paul's", "");
+INSERT INTO teams VALUES ("25", "234", "Virginia St.", "");
+INSERT INTO teams VALUES ("25", "235", "Virginia Union", "");
+
 -- Central States Football League
 INSERT INTO confs VALUES ("2", "108", "Central States Football League");
 INSERT INTO teams VALUES ("108", "1991", "Bacone College", "");
@@ -236,11 +263,11 @@ INSERT INTO teams VALUES ("108", "2324", "Texas College", "");
 
 -- FCS Independents
 INSERT INTO confs VALUES ("2", "74", "FCS Independents");
-INSERT INTO teams VALUES ("74", "276", "Abilene Christian", ""); -- NEED
+INSERT INTO teams VALUES ("74", "276", "Abilene Christian", "");
 INSERT INTO teams VALUES ("74", "2595", "Charlotte", "nad");
 INSERT INTO teams VALUES ("74", "2601", "Houston Baptist", "");
 INSERT INTO teams VALUES ("74", "216", "Monmouth", "mae");
-INSERT INTO teams VALUES ("74", "2539", "Incarnate Word", ""); -- NEED
+INSERT INTO teams VALUES ("74", "2539", "Incarnate Word", "");
 INSERT INTO teams VALUES ("74", "2461", "Lake Erie College", "");
 INSERT INTO teams VALUES ("74", "2349", "N.C. Pembroke", "");
 INSERT INTO teams VALUES ("74", "2003", "N. Greenville", "");
@@ -248,6 +275,36 @@ INSERT INTO teams VALUES ("74", "1662", "Panhandle St.", "");
 INSERT INTO teams VALUES ("74", "290", "S.W. Baptist", "");
 INSERT INTO teams VALUES ("74", "2328", "Urbana", "");
 INSERT INTO teams VALUES ("74", "2004", "We. Washington", "");
+
+-- Great Lakes Football Conference
+INSERT INTO confs VALUES ("2", "100", "Great Lakes Football Conference");
+INSERT INTO teams VALUES ("100", "590", "Central St.", "");
+INSERT INTO teams VALUES ("100", "249", "Kentucky Wesleyan", "");
+INSERT INTO teams VALUES ("100", "2305", "Lincoln (MO)", "");
+INSERT INTO teams VALUES ("100", "302", "St. Joseph's (IN)", "");
+INSERT INTO teams VALUES ("100", "284", "Missouri S&T", "");
+
+-- Great Lakes Intercollegiate Athletic
+INSERT INTO confs VALUES ("2", "97", "Great Lakes Intercollegiate Athletic");
+INSERT INTO teams VALUES ("97", "292", "Ashland", "");
+INSERT INTO teams VALUES ("97", "293", "Ferris St.", "");
+INSERT INTO teams VALUES ("97", "1348", "Findlay", "");
+INSERT INTO teams VALUES ("97", "294", "Grand Valley St.", "");
+INSERT INTO teams VALUES ("97", "2313", "Hillsdale", "");
+INSERT INTO teams VALUES ("97", "297", "Michigan Tech", "");
+INSERT INTO teams VALUES ("97", "298", "Northern Michigan", "");
+INSERT INTO teams VALUES ("97", "299", "Northwood", "");
+INSERT INTO teams VALUES ("97", "300", "Saginaw Valley", "");
+INSERT INTO teams VALUES ("97", "2295", "Tiffin", "");
+INSERT INTO teams VALUES ("97", "296", "Univ. of Indianapolis", "");
+INSERT INTO teams VALUES ("97", "303", "Wayne State (MI)", "");
+
+-- Great Northwest Athletic Conference
+INSERT INTO confs VALUES ("2", "107", "Great Northwest Athletic Conference");
+INSERT INTO teams VALUES ("107", "597", "Central Washington", "");
+INSERT INTO teams VALUES ("107", "2344", "Dixie St.", "");
+INSERT INTO teams VALUES ("107", "315", "Humboldt St.", "");
+INSERT INTO teams VALUES ("107", "1920", "Western Oregon", "");
 
 -- Frontier
 INSERT INTO confs VALUES ("2", "62", "Frontier");
@@ -343,6 +400,19 @@ INSERT INTO teams VALUES ("14", "124", "Southern Ill.", "ssn");
 INSERT INTO teams VALUES ("14", "126", "Western Ill.", "wwj");
 INSERT INTO teams VALUES ("14", "225", "Youngstown St.", "yyb");
 
+-- North Coast Atletic
+INSERT INTO confs VALUES ("2", "53", "North Coast Athletic");
+INSERT INTO teams VALUES ("53", "491", "Allegheny", "");
+INSERT INTO teams VALUES ("53", "493", "Denison Univ.", "");
+INSERT INTO teams VALUES ("53", "494", "Earlham", "");
+INSERT INTO teams VALUES ("53", "503", "Hiram Col.", "");
+INSERT INTO teams VALUES ("53", "495", "Kenyon Col.", "");
+INSERT INTO teams VALUES ("53", "496", "Oberlin Col.", "");
+INSERT INTO teams VALUES ("53", "497", "Ohio Wesleyan", "");
+INSERT INTO teams VALUES ("53", "420", "Wabash", "");
+INSERT INTO teams VALUES ("53", "498", "Wittenberg", "");
+INSERT INTO teams VALUES ("53", "499", "Wooster", "");
+
 -- Northeast
 INSERT INTO confs VALUES ("2", "73", "Northeast");
 INSERT INTO teams VALUES ("73", "1948", "Bryant", "bvx");
@@ -352,6 +422,19 @@ INSERT INTO teams VALUES ("73", "217", "Robert Morris", "rri");
 INSERT INTO teams VALUES ("73", "259", "Sacred Heart", "sbe");
 INSERT INTO teams VALUES ("73", "219", "St. Francis (PA)", "sps");
 INSERT INTO teams VALUES ("73", "223", "Wagner", "wwa");
+
+-- Northeast 10
+INSERT INTO confs VALUES ("2", "99", "Northeast 10");
+INSERT INTO teams VALUES ("99", "245", "American Intl.", "");
+INSERT INTO teams VALUES ("99", "237", "Assumption", "");
+INSERT INTO teams VALUES ("99", "238", "Bentley", "");
+INSERT INTO teams VALUES ("99", "252", "UMass Lowell", "");
+INSERT INTO teams VALUES ("99", "2332", "Merrimack", "");
+INSERT INTO teams VALUES ("99", "254", "New Haven", "");
+INSERT INTO teams VALUES ("99", "256", "Pace", "");
+INSERT INTO teams VALUES ("99", "260", "Southern Connecticut St.", "");
+INSERT INTO teams VALUES ("99", "1755", "St. Anselm", "");
+INSERT INTO teams VALUES ("99", "253", "Stonehill", "");
 
 -- Ohio Valley
 INSERT INTO confs VALUES ("2", "18", "OVC");
@@ -384,11 +467,35 @@ INSERT INTO teams VALUES ("20", "166", "Dayton", "ddj");
 INSERT INTO teams VALUES ("20", "167", "Drake", "dde");
 INSERT INTO teams VALUES ("20", "2001", "Jacksonville", "jjg");
 INSERT INTO teams VALUES ("20", "139", "Marist", "mad");
-INSERT INTO teams VALUES ("20", "2597", "Mercer", "");  -- NONE?
+INSERT INTO teams VALUES ("20", "2597", "Mercer", "");
 INSERT INTO teams VALUES ("20", "153", "Morehead State", "mmw");
 INSERT INTO teams VALUES ("20", "169", "San Diego", "sbc");
-INSERT INTO teams VALUES ("20", "2598", "Stetson", "");  -- NONE?
+INSERT INTO teams VALUES ("20", "2598", "Stetson", "");
 INSERT INTO teams VALUES ("20", "170", "Valparaiso", "vvi");
+
+-- Rocky Mountain Athletic
+INSERT INTO confs VALUES ("2", "35", "Rocky Mountain Athletic");
+INSERT INTO teams VALUES ("35", "339", "Adams St.", "");
+INSERT INTO teams VALUES ("35", "2375", "CSU-Pueblo", "");
+INSERT INTO teams VALUES ("35", "340", "Chadron St.", "");
+INSERT INTO teams VALUES ("35", "341", "Colorado School of Mines", "");
+INSERT INTO teams VALUES ("35", "343", "Ft. Lewis", "");
+INSERT INTO teams VALUES ("35", "344", "Mesa St.", "");
+INSERT INTO teams VALUES ("35", "346", "Nebraska-Kearney", "");
+INSERT INTO teams VALUES ("35", "345", "N.Mexico Highlands", "");
+INSERT INTO teams VALUES ("35", "266", "Western N.Mexico", "");
+INSERT INTO teams VALUES ("35", "347", "Western St.", "");
+
+-- South Atlantic
+INSERT INTO confs VALUES ("2", "36", "South Atlantic");
+INSERT INTO teams VALUES ("36", "2374", "Brevard Col.", "");
+INSERT INTO teams VALUES ("36", "348", "Carson-Newman", "");
+INSERT INTO teams VALUES ("36", "349", "Catawba", "");
+INSERT INTO teams VALUES ("36", "352", "Lenoir-Rhyne", "");
+INSERT INTO teams VALUES ("36", "353", "Mars Hill", "");
+INSERT INTO teams VALUES ("36", "255", "Newberry", "");
+INSERT INTO teams VALUES ("36", "622", "Tusculum", "");
+INSERT INTO teams VALUES ("36", "355", "Wingate", "");
 
 -- Southern
 INSERT INTO confs VALUES ("2", "21", "Southern");
@@ -402,6 +509,19 @@ INSERT INTO teams VALUES ("21", "218", "Samford", "sks");
 INSERT INTO teams VALUES ("21", "179", "W. Carolina", "wwi");
 INSERT INTO teams VALUES ("21", "267", "Wofford", "wwp");
 
+-- Southern Intercollegiate Athletic
+INSERT INTO confs VALUES ("2", "37", "Southern Intercollegiate Athletic");
+INSERT INTO teams VALUES ("37", "357", "Albany St.", "");
+INSERT INTO teams VALUES ("37", "2293", "Benedict", "");
+INSERT INTO teams VALUES ("37", "358", "Clark Atlanta", "");
+INSERT INTO teams VALUES ("37", "359", "Fort Valley St.", "");
+INSERT INTO teams VALUES ("37", "248", "Kentucky St.", "");
+INSERT INTO teams VALUES ("37", "250", "Lane", "");
+INSERT INTO teams VALUES ("37", "360", "Miles", "");
+INSERT INTO teams VALUES ("37", "361", "Morehouse", "");
+INSERT INTO teams VALUES ("37", "2310", "Stillman", "");
+INSERT INTO teams VALUES ("37", "364", "Tuskegee", "");
+
 -- Southland
 INSERT INTO confs VALUES ("2", "22", "Southland");
 INSERT INTO teams VALUES ("22", "268", "C. Arkansas", "uca");
@@ -412,6 +532,18 @@ INSERT INTO teams VALUES ("22", "183", "Northwestern St.", "nnw");
 INSERT INTO teams VALUES ("22", "184", "Sam Houston St.", "ssa");
 INSERT INTO teams VALUES ("22", "2234", "SE Louisiana", "sse");
 INSERT INTO teams VALUES ("22", "186", "Stephen F. Austin", "sst");
+
+-- West Virginia Intercollegiate Athletic
+INSERT INTO confs VALUES ("2", "39", "West Virginia Intercollegiate Athletic");
+INSERT INTO teams VALUES ("39", "2325", "Charleston Univ.", "");
+INSERT INTO teams VALUES ("39", "371", "Concord", "");
+INSERT INTO teams VALUES ("39", "372", "Fairmont St.", "");
+INSERT INTO teams VALUES ("39", "373", "Glenville St.", "");
+INSERT INTO teams VALUES ("39", "2377", "Seton Hill", "");
+INSERT INTO teams VALUES ("39", "374", "Shepherd", "");
+INSERT INTO teams VALUES ("39", "375", "W. Liberty St.", "");
+INSERT INTO teams VALUES ("39", "593", "W. Virginia St.", "");
+INSERT INTO teams VALUES ("39", "377", "W. Virginia Wesleyan", "");
 
 -- SWAC
 INSERT INTO confs VALUES ("2", "23", "SWAC");
@@ -430,4 +562,5 @@ INSERT INTO teams VALUES ("23", "194", "Texas Southern", "ttn");
 INSERT INTO teams VALUES ("23", "2599", "Reinhardt", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "2596", "Warner", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "584", "Tufts", "");  -- NONE?
+INSERT INTO teams VALUES ("23", "2602", "Florida Tech Panthers", "");
 
