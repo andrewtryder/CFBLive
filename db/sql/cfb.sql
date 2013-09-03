@@ -306,6 +306,20 @@ INSERT INTO teams VALUES ("107", "2344", "Dixie St.", "");
 INSERT INTO teams VALUES ("107", "315", "Humboldt St.", "");
 INSERT INTO teams VALUES ("107", "1920", "Western Oregon", "");
 
+-- Gulf South
+INSERT INTO confs VALUES ("2", "27", "Gulf South");
+INSERT INTO teams VALUES ("27", "608", "Arkansas Tech", "");
+INSERT INTO teams VALUES ("27", "598", "Arkansas-Monticello", "");
+INSERT INTO teams VALUES ("27", "269", "Delta St.", "");
+INSERT INTO teams VALUES ("27", "618", "Harding", "");
+INSERT INTO teams VALUES ("27", "270", "Henderson St.", "");
+INSERT INTO teams VALUES ("27", "273", "North Alabama", "");
+INSERT INTO teams VALUES ("27", "1658", "Ouachita Baptist", "");
+INSERT INTO teams VALUES ("27", "609", "Southern Ark.", "");
+INSERT INTO teams VALUES ("27", "274", "Valdosta St.", "");
+INSERT INTO teams VALUES ("27", "610", "West Alabama", "");
+INSERT INTO teams VALUES ("27", "275", "West Georgia", "");
+
 -- Frontier
 INSERT INTO confs VALUES ("2", "62", "Frontier");
 INSERT INTO teams VALUES ("62", "1017", "Eastern Oregon", "");
@@ -562,5 +576,5 @@ INSERT INTO teams VALUES ("23", "194", "Texas Southern", "ttn");
 INSERT INTO teams VALUES ("23", "2599", "Reinhardt", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "2596", "Warner", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "584", "Tufts", "");  -- NONE?
-INSERT INTO teams VALUES ("23", "2602", "Florida Tech Panthers", "");
+INSERT INTO teams VALUES ("23", "2602", "Florida Tech", ""); -- ?
 
