@@ -565,7 +565,7 @@ class CFBLive(callbacks.Plugin):
 
         if not self.games:
             irc.reply("I don't have self.games")
-        else:
+        else:  # convert this over to doing this internally.
             for (k, v) in self.games.items():
                 at = self._tidwrapper(v['awayteam'])
                 ht = self._tidwrapper(v['hometeam'])
@@ -602,8 +602,8 @@ class CFBLive(callbacks.Plugin):
 
     cfblivestatus = wrap(cfblivestatus)
 
-    #def checkcfb(self, irc):
-    def checkcfb(self, irc, msg, args):
+    def checkcfb(self, irc):
+    #def checkcfb(self, irc, msg, args):
         """
         Main loop.
         """
@@ -791,7 +791,7 @@ class CFBLive(callbacks.Plugin):
             self.nextcheck = self._utcnow()+600  # 10 minutes from now.
             self.log.info("checkcfb: no active games and I have not got new games yet, so I am holding off for 10 minutes.")
 
-    checkcfb = wrap(checkcfb)
+    #checkcfb = wrap(checkcfb)
 
 Class = CFBLive
 
