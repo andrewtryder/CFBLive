@@ -8,18 +8,16 @@
 # my libs
 from base64 import b64decode
 import cPickle as pickle
-import datetime
 from BeautifulSoup import BeautifulSoup
 import sqlite3
 import os.path
+import datetime  # utc time.
+from itertools import chain
 # extra supybot libs
 import supybot.conf as conf
 import supybot.schedule as schedule
 import supybot.ircmsgs as ircmsgs
-# extra supybot libs
-import supybot.conf as conf
-import supybot.schedule as schedule
-import supybot.ircmsgs as ircmsgs
+# stock supybot libs
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -63,17 +61,17 @@ class CFBLive(callbacks.Plugin):
         # now schedule our events.
         def checkcfbcron():
             self.checkcfb(irc)
-        try:
-            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
+        try:  # add our cronjob.
+            schedule.addPeriodicEvent(checkcfbcron, 30, now=True, name='checkcfb')
         except AssertionError:
             try:
                 schedule.removeEvent('checkcfb')
             except KeyError:
                 pass
-            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
+            schedule.addPeriodicEvent(checkcfbcron, 30, now=True, name='checkcfb')
 
     def die(self):
-        try:
+        try:  # remove cronjob.
             schedule.removeEvent('checkcfb')
         except KeyError:
             pass
@@ -87,7 +85,6 @@ class CFBLive(callbacks.Plugin):
         """General HTTP resource fetcher."""
 
         # self.log.info(url)
-
         try:
             h = {"User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:17.0) Gecko/20100101 Firefox/17.0"}
             page = utils.web.getUrl(url, headers=h)
@@ -124,6 +121,7 @@ class CFBLive(callbacks.Plugin):
         # we do have channels. lets go and check where to put what.
         confids = self._tidstoconfids(awayid, homeid)  # grab the list of conf ids.
         if not confids:  # failsafe here.
+            self.log.error("_post: something went wrong with confids for awayid: {0} homeid: {1} m: {2} confids: {3}".format(awayid, homeid, message, confids))
             return
         postchans = [k for (k, v) in self.channels.items() if __builtins__['any'](z in v for z in confids)]
         # iterate over each.
@@ -170,19 +168,19 @@ class CFBLive(callbacks.Plugin):
     # TEAM DB AND FUNCTIONS #
     #########################
 
-    def _tidwrapper(self, tid):
+    def _tidwrapper(self, tid, d=False):
         """TeamID wrapper."""
 
         # first, try to see if it's in the database.
-        dblookup = self._tidtoname(tid)
+        dblookup = self._tidtoname(tid, d=d)
         if dblookup:  # return the DB entry.
             return dblookup
-        else:  # not in the db. perform http lookup.
+        else:  # not in the db. perform http lookup to grab its name.
             url = b64decode('aHR0cDovL20ueWFob28uY29tL3cvc3BvcnRzL25jYWFmL3RlYW0v') + 'ncaaf.t.%s' % str(tid)
             html = self._httpget(url)
             if not html:
                 self.log.error("ERROR: _tidwrapper: Could not fetch {0}".format(url))
-                return None
+                return "Unknown"
             # try and grab teamname.
             soup = BeautifulSoup(html, convertEntities=BeautifulSoup.HTML_ENTITIES, fromEncoding='utf-8')
             teamname = soup.find('div', attrs={'class':'uic title first'})
@@ -194,16 +192,14 @@ class CFBLive(callbacks.Plugin):
                     conf = conf.getText()
                 else:  # no conf.
                     conf = "None"
-                #self.log.info("_tidwrapper: Should add in {0} as {1} (Conference: {2})".format(tid, teamname, conf))
-                self.log.info('_tidwrapper: INSERT INTO teams VALUES ("{0}", "{1}", "{2}");'.format(conf, tid, teamname))
+                self.log.info('_tidwrapper: INSERT INTO teams VALUES ("{0}", "{1}", "{2}", "");'.format(conf, tid, teamname))
                 return teamname.encode('utf-8')
             else:  # didn't find the team. Gotta bail..
                 self.log.error("ERROR: _tidwrapper: Could not find teamname for tid: {0}".format(tid))
-                #self.log.info(str(soup))
-                return None
+                return "Unknown"
 
-    def _tidtoname(self, tid):
-        """Return team name for teamid from database."""
+    def _tidtoname(self, tid, d=False):
+        """Return team name for teamid from database. Use d=True to return as dict."""
 
         with sqlite3.connect(self._cfbdb) as conn:
             cursor = conn.cursor()
@@ -216,19 +212,26 @@ class CFBLive(callbacks.Plugin):
             if row[1] != '':  # some are empty. we did get something back.
                 # check if team is in rankings dict.
                 if row[1] in self.rankings:  # in there so append the #.
-                    return "({0}){1}".format(self.rankings[row[1]], row[0].encode('utf-8'))
+                    if d:  # return as dict.
+                        return {'rank':self.rankings[row[1]], 'team':row[0].encode('utf-8')}
+                    else:  # normal return
+                        return "({0}){1}".format(self.rankings[row[1]], row[0].encode('utf-8'))
                 else:  # not in the table so just return the teamname.
-                    return row[0].encode('utf-8')
+                    if d: # return as dict.
+                        return {'team': row[0].encode('utf-8')}
+                    else:  # normal return
+                        return row[0].encode('utf-8')
             else:  # return just the team.
-                return row[0].encode('utf-8')
+                if d:  # return as dict.
+                    return {'team': row[0].encode('utf-8')}
+                else:  # normal return
+                    return row[0].encode('utf-8')
 
     def _tidstoconfids(self, tid1, tid2):
         """Fetch the conference ID for a team."""
 
         with sqlite3.connect(self._cfbdb) as conn:
             cursor = conn.cursor()
-            #query = "SELECT confs.division, teams.conf FROM teams LEFT JOIN confs ON teams.conf = confs.id WHERE teams.id=?"
-            #query = "SELECT confs.division, teams.conf FROM teams LEFT JOIN confs ON teams.conf = confs.id WHERE teams.id IN (?,?)"
             query = "SELECT DISTINCT conf FROM teams WHERE id IN (?, ?)"
             cursor.execute(query, (tid1, tid2,))
             item = [i[0] for i in cursor.fetchall()]  # put the ids into a list.
@@ -239,7 +242,7 @@ class CFBLive(callbacks.Plugin):
                 return item
 
     def _confs(self):
-        """Return a dict containing all conferences and their ids."""
+        """Return a dict containing all conferences and their ids: k=id, v=confs."""
 
         with sqlite3.connect(self._cfbdb) as conn:
             cursor = conn.cursor()
@@ -263,20 +266,15 @@ class CFBLive(callbacks.Plugin):
             return None
 
     def _tidtoconf(self, tid):
-        """Fetch what conference a team is in."""
+        """Fetch what conference name (string) a team is in."""
 
         with sqlite3.connect(self._cfbdb) as conn:
             cursor = conn.cursor()
-            query = "SELECT conf FROM teams WHERE id=?"
+            query = "SELECT conference FROM confs WHERE id IN (SELECT conf FROM teams WHERE id=?)"
             cursor.execute(query, (tid,))
-            confid = cursor.fetchone()[0]
-            # now grab the conf.
-            cursor = conn.cursor()
-            query = "SELECT conference FROM confs WHERE id=?"
-            cursor.execute(query, (confid,))
-            conf = cursor.fetchone()[0]
-        # now return
-        return conf.encode('utf-8')
+            conference = cursor.fetchone()[0]
+        # now return.
+        return conference.encode('utf-8')
 
     def _confidtoname(self, confid):
         """Validate a conf and return its ID."""
@@ -291,6 +289,17 @@ class CFBLive(callbacks.Plugin):
             return row[0].encode('utf-8')
         else:
             return None
+
+    def _fbsconfs(self):
+        """Return a list of all FBS conference ids."""
+
+        with sqlite3.connect(self._cfbdb) as conn:
+            cursor = conn.cursor()
+            query = "SELECT id FROM confs WHERE division=1"
+            cursor.execute(query)
+            confids = [i[0] for i in cursor.fetchall()]
+        # now return.
+        return confids
 
     ####################
     # FETCH OPERATIONS #
@@ -343,8 +352,8 @@ class CFBLive(callbacks.Plugin):
     def _txttodict(self, txt):
         """Games game lines from fetchgames and turns them into a list of dicts."""
 
-        lines = txt.splitlines()
-        games = {}
+        lines = txt.splitlines()  # split.
+        games = {}  # container.
 
         for line in lines:  # iterate over.
             if line.startswith('g|'): # only games.
@@ -359,7 +368,6 @@ class CFBLive(callbacks.Plugin):
                 t['awayscore'] = int(cclsplit[8])
                 t['homescore'] = int(cclsplit[9])
                 t['start'] = int(cclsplit[10])
-                #t['yrdstoscore'] = cclsplit[13]
                 #t[''] = cclsplit[]
                 games[cclsplit[1]] = t
         # process if we have games or not.
@@ -429,14 +437,14 @@ class CFBLive(callbacks.Plugin):
         utcnow = self._utcnow()
         # now determine if we should repopulate.
         if ((len(self.rankings) == 0) or (not self.rankingstimer) or (utcnow > self.rankingstimer)):
-            url = 'http://sports.yahoo.com/ncaa/football/polls?poll=1'
-            # url = b64decode('aHR0cDovL3Nwb3J0cy55YWhvby5jb20vbmNhYS9mb290YmFsbC9wb2xscz9wb2xsPTE=')
+            # we'll put a try/except for the BCS, as well.
+            url = b64decode('aHR0cDovL3Nwb3J0cy55YWhvby5jb20vbmNhYS9mb290YmFsbC9wb2xscz9wb2xsPTE=')
             # fetch url
             html = self._httpget(url)
             if not html:
                 self.log.error("ERROR: Could not fetch {0}".format(url))
                 self.rankingstimer = utcnow+60
-                self.log.info("_rankings: html failed")
+                self.log.info("_rankings: AP html failed")
             try:  # parse the table and populate.
                 soup = BeautifulSoup(html)
                 table = soup.find('table', attrs={'id':'ysprankings-results-table'})
@@ -446,11 +454,10 @@ class CFBLive(callbacks.Plugin):
                     self.rankings[team] = i+1  # populate dict.
                 # now finalize.
                 self.rankingstimer = utcnow+86400 # 24hr.
-                self.log.info("_rankings: updated rankings.")
+                self.log.info("_rankings: updated AP rankings.")
             except Exception, e:  # something went wrong.
-                self.log.error("_rankings: ERROR: {0}".format(e))
+                self.log.error("_rankings: AP ERROR: {0}".format(e))
                 self.rankingstimer = utcnow+60  # rerun in one minute.
-                self.log.info("_rankings: exception")
 
     ######################
     # CHANNEL MANAGEMENT #
@@ -464,7 +471,7 @@ class CFBLive(callbacks.Plugin):
         def checkcfbcron():
             self.checkcfb(irc)
         try:
-            schedule.addPeriodicEvent(checkcfbcron, 20, now=False, name='checkcfb')
+            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
         except AssertionError:
             irc.reply("The CFBLive checker was already running.")
         else:
@@ -551,30 +558,57 @@ class CFBLive(callbacks.Plugin):
     # PUBLIC COMMANDS #
     ###################
 
-    def cfblivestatus(self, irc, msg, args):
+    def cfbgames(self, irc, msg, args):
         """
-        .
+        Display all current games in the self.games
         """
 
-        if len(self.channels) != 0:
-            irc.reply("CHANNELS: {0}".format(self.channels))
+        if not self.games:
+            irc.reply("I don't have self.games")
+        else:
+            for (k, v) in self.games.items():
+                at = self._tidwrapper(v['awayteam'])
+                ht = self._tidwrapper(v['hometeam'])
+                irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
+
+    cfbgames = wrap(cfbgames)
+
+    def cfblivestatus(self, irc, msg, args):
+        """
+        Debug function to help us out.
+        """
+
         irc.reply("NEXTCHECK: {0}".format(self.nextcheck))
         irc.reply("RANKINGS: {0}".format(self.rankings))
+        irc.reply("TEST: {0}".format([v for (k, v) in self.channels.items()]))
         if self.games:
+            if len(self.channels) != 0: # consolidate the sets from each active channel.
+                activeconfs = set(chain.from_iterable(([v for (k, v) in self.channels.items()])))
+            else:  # just grab FBS ids if not.
+                activeconfs = set(self._fbsconfs())
+            # if we don't have channels, should we default to all FBS?
             for (k, v) in self.games.items():
-                if v['status'] == "P":
-                    at = self._tidwrapper(v['awayteam'])
-                    ht = self._tidwrapper(v['hometeam'])
-                    irc.reply("{0} :: {1} v. {2} :: {3}".format(k, at, ht, v))
+                # this requires the team be in our db. tidstoconfids = failsafe function if not in DB?
+                teamidslist = self._tidstoconfids(v['awayteam'], v['hometeam'])  # grab the list of conf ids for this game.
+                if teamidslist:  # failsafe here.
+                    if not activeconfs.isdisjoint(teamidslist):
+                        at = self._tidwrapper(v['awayteam'])
+                        ht = self._tidwrapper(v['hometeam'])
+                        irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
+                    else:
+                        at = self._tidwrapper(v['awayteam'])
+                        ht = self._tidwrapper(v['hometeam'])
+                        irc.reply("NOT IN :: {0} v. {1} :: {2}".format(at, ht, v))
 
     cfblivestatus = wrap(cfblivestatus)
 
-    def checkcfb(self, irc):
-    #def checkcfb(self, irc, msg, args):
+    #def checkcfb(self, irc):
+    def checkcfb(self, irc, msg, args):
         """
         Main loop.
         """
 
+        # debug.
         self.log.info("checkcfb: starting...")
         # before anything, check if nextcheck is set and is in the future.
         if self.nextcheck:  # set
@@ -614,34 +648,41 @@ class CFBLive(callbacks.Plugin):
                     # SCORING PLAY.
                     if ((games2[k]['awayscore'] > v['awayscore']) or (games2[k]['homescore'] > v['homescore'])):
                         self.log.info("Should post scoring event from {0}".format(k))
-                        # first, get some basics.
-                        at = self._tidwrapper(v['awayteam'])  # fetch visitor.
-                        ht = self._tidwrapper(v['hometeam'])  # fetch home.
+                        # first, get some basics with teamnames.
+                        at = self._tidwrapper(v['awayteam'], d=True)  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'], d=True)  # fetch home.
                         # get the score diff so we can figure out the score type and who scored.
                         apdiff = abs((int(v['awayscore'])-int(games2[k]['awayscore'])))  # awaypoint diff.
                         hpdiff = abs((int(v['homescore'])-int(games2[k]['homescore'])))  # homepoint diff.
                         if apdiff != 0:  # awayscore is not 0, ie: awayteam scored.
-                            #sediff = apdiff  # int
-                            seteam = at  # get awayteam.
-                            setype = self._scoretype(apdiff)  # score type.
+                            sediff = apdiff  # int
+                            seteam = at['team']  # get awayteam.
                         else:  # hometeam scored.
-                            #sediff = hpdiff  # int
-                            seteam = ht  # get awayteam.
-                            setype = self._scoretype(hpdiff)  # score type.
-                        # rest of the string.
+                            sediff = hpdiff  # int
+                            seteam = ht['team']  # get awayteam.
+                        # figure out the scoretype.
+                        setype = self._scoretype(sediff)  # figure out score type.
+                        # first, we need to reconstruct at/ht as a string. since we called tidwrapper with d=True, we have to reattach the ranking, if present.
+                        if 'rank' in at:  # we have rank so (#)Team.
+                            at = "({0}){1}".format(at['rank'], at['team'])
+                        else:  # no rank.
+                            at = "{0}".format(at['team'])
+                        if 'rank' in ht:  # do the same for the hometeam.
+                            ht = "({0}){1}".format(ht['rank'], ht['team'])
+                        else:  # no rank.
+                            ht = "{0}".format(ht['team'])
+                        # now construct the rest of the string.
                         gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])  # bold the leader.
                         scoretime = "{0} {1}".format(utils.str.ordinal(games2[k]['quarter']), games2[k]['time'])  # score time.
-                        se = self._scoreevent(v['hometeam'])
+                        se = self._scoreevent(v['hometeam'])  # use the hometeam id for plays-### (scoreevent page).
                         if se:  # we got scoringevent back.
                             # make sure this event has not been posted yet.
-                            if se['id'] in self.dupedict[k]:  # it's been posted.
-                                self.log.info("checkcfb: I'm trying to repost scoring event {0} from {1}".format(se['id'], k))
-                            else:  # we have NOT posted it yet. lets format for output.
-                                mstr = "{0} :: {1} :: {2} :: {3} ({4})".format(gamestr, setype, seteam, se['event'], scoretime)  # lets construct the string.
+                            if se['id'] not in self.dupedict[k]:  # we have NOT posted it yet. lets format for output.
+                                mstr = "{0} :: {1} :: {2} :: {3} ({4})".format(gamestr, ircutils.bold(setype), seteam, se['event'], scoretime)  # lets construct the string.
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                                 self.dupedict[k].add(se['id'])  # add to dupedict.
                         else:  # scoring event did not work. just post a generic string. this could be buggy.
-                            mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, setype, seteam, scoretime)
+                            mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, ircutils.bold(setype), seteam, scoretime)
                             self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                     # END OF 1ST AND 3RD QUARTER.
                     if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] in ("1", "3")) and (games2[k]['time'] == "0:00")):
@@ -685,14 +726,12 @@ class CFBLive(callbacks.Plugin):
                         # add game into dupedict.
                         if k not in self.dupedict:
                             self.dupedict[k] = set([])
-                        else:
-                            self.log.info("checkcfb: kickoff: I tried to readd {0} to dupedict".format(k))
                         # now construct kickoff event.
                         at = self._tidwrapper(v['awayteam'])  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'])  # fetch home.
                         atconf = self._tidtoconf(v['awayteam'])  # fetch visitor conf.
                         htconf = self._tidtoconf(v['hometeam'])  # fetch hometeam conf.
-                        mstr = "{0}({1}) @ {2}({3}) :: {4}".format(at, atconf, ht, htconf, ircutils.mircColor("KICKOFF", 'green'))
+                        mstr = "{0}({1}) @ {2}({3}) :: {4}".format(ircutils.bold(at), atconf, ircutils.bold(ht), htconf, ircutils.mircColor("KICKOFF", 'green'))
                         self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # GAME GOES FINAL.
                     if ((v['status'] == "P") and (games2[k]['status'] == "F")):
@@ -709,8 +748,6 @@ class CFBLive(callbacks.Plugin):
                         # lets now try to remove from dupedict.
                         if k in self.dupedict:
                             del self.dupedict[k]  # delete.
-                        else:
-                            self.log.info("checkcfb: {0} went final but was not in dupedict".format(k))
                     # GAME GOES INTO A DELAY.
                     if ((v['status'] == "P") and (games2[k]['status'] == "D")):
                         self.log.info("{0} is going into delay.".format(k))
@@ -729,9 +766,10 @@ class CFBLive(callbacks.Plugin):
         # done checking. copy new to self.games
         self.games = games2 # change status.
         # last, before we reset to check again, we need to verify some states of games in order to set sentinel or not.
-        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final ?
+        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final
         # first, we grab all the statuses in newgames (games2)
         gamestatuses = set([i['status'] for i in games2.values()])
+        self.log.info("GAMESTATUSES: {0}".format(gamestatuses))
         # next, check what the statuses of those games are and act accordingly.
         if (('D' in gamestatuses) or ('P' in gamestatuses)): # if any games are being played or in a delay, act normal.
             self.nextcheck = None # set to None to make sure we're checking on normal time.
@@ -747,13 +785,13 @@ class CFBLive(callbacks.Plugin):
                     self.nextcheck = None
                     self.log.info("checkcfb: firstgametime has passed but is under an hour so we resume normal operations.")
                 else:  # over an hour so we set firstgametime an hour from now.
-                    self.nextcheck = utcnow+3600
-                    self.log.info("checkcfb: firstgametime is over an hour from now so we're going to backoff for an hour".format(firstgametime))
+                    self.nextcheck = utcnow+600
+                    self.log.info("checkcfb: firstgametime is over an hour late so we're going to backoff for 10 minutes")
         else:  # everything is "F" (Final). we want to backoff so we're not flooding.
-            self.nextcheck = utcnow+600  # 10 minutes from now.
+            self.nextcheck = self._utcnow()+600  # 10 minutes from now.
             self.log.info("checkcfb: no active games and I have not got new games yet, so I am holding off for 10 minutes.")
 
-    #checkcfb = wrap(checkcfb)
+    checkcfb = wrap(checkcfb)
 
 Class = CFBLive
 
