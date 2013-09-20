@@ -592,4 +592,5 @@ INSERT INTO teams VALUES ("23", "2599", "Reinhardt", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "2596", "Warner", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "584", "Tufts", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "2602", "Florida Tech", ""); -- ?
-
+INSERT INTO teams VALUES ("23", "2358", "Birmingham-Southern", ""); -- Southern Collegiate Athletic
+INSERT INTO teams VALUES ("23", "2600", "Berry", ""); -- Southern Collegiate Athletic

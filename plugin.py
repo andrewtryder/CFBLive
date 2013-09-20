@@ -328,8 +328,8 @@ class CFBLive(callbacks.Plugin):
         else: # we have a host and it's under the cache time.
             return self.fetchhost
 
-    def _fetchgames(self):
-        """Return the games.txt data."""
+    def _fetchgames(self, filt=True):
+        """Return the games.txt data into a processed dict. Set filter=False for all games."""
 
         url = self._fetchhost() # grab the host to check.
         if not url: # didn't get it back.
@@ -343,14 +343,33 @@ class CFBLive(callbacks.Plugin):
             self.log.error("ERROR: _fetchgames: could not fetch {0} :: {1}".format(url))
             return None
         # now turn the "html" into a list of dicts.
-        newgames = self._txttodict(html)
+        newgames = self._txttodict(html, filt=filt)
         if not newgames: # no new games for some reason.
             return None
-        else: # return newgames.
+        else: # we have games. return.
             return newgames
 
-    def _txttodict(self, txt):
-        """Games game lines from fetchgames and turns them into a list of dicts."""
+    def _filtergame(self, at, ht):
+        """With at and ht ids, we need to test if we should filter."""
+
+        # check to see what activeconfs comes from.
+        if len(self.channels) != 0: # we have "active" confs. consolidate the sets from each active channel.
+            activeconfs = set(chain.from_iterable(([v for (k, v) in self.channels.items()])))
+        else:  # no active confs so we just grab FBS conf ids.
+            activeconfs = set(self._fbsconfs())
+        # now lets take the at+ht ids and test.
+        teamidslist = self._tidstoconfids(at, ht)  # grab the list of conf ids for this game.
+        if teamidslist:  # failsafe but should never trigger.
+            if not activeconfs.isdisjoint(teamidslist):  # this will be True if one of the ids from teamidslist = in activeconfs.
+                return True
+            else:  # at/ht (game) is NOT in activeconfs.
+                return False
+        else:  # missing teams.. sigh.
+            self.log.info("_filtergame: teamidslist failed on one of AT: {0} HT: {1}".format(at, ht))
+            return False
+
+    def _txttodict(self, txt, filt):
+        """Games game lines from fetchgames and turns them into a list of dicts. filt=True to limit games."""
 
         lines = txt.splitlines()  # split.
         games = {}  # container.
@@ -368,8 +387,13 @@ class CFBLive(callbacks.Plugin):
                 t['awayscore'] = int(cclsplit[8])
                 t['homescore'] = int(cclsplit[9])
                 t['start'] = int(cclsplit[10])
-                #t[''] = cclsplit[]
-                games[cclsplit[1]] = t
+                # now we need to test if we should filter.
+                if filt:  # True. filtertest will be True if we should include the game. False if we should skip/pass over.
+                    filtertest = self._filtergame(t['awayteam'], t['hometeam'])
+                    if filtertest:  # add into games dict.
+                       games[cclsplit[1]] = t
+                else:  # False. Don't filter. Add everything.
+                    games[cclsplit[1]] = t
         # process if we have games or not.
         if len(games) == 0: # no games.
             self.log.error("ERROR: No matching lines in _txttodict")
@@ -563,44 +587,16 @@ class CFBLive(callbacks.Plugin):
         Display all current games in the self.games
         """
 
-        if not self.games:
-            irc.reply("I don't have self.games")
-        else:  # convert this over to doing this internally.
-            for (k, v) in self.games.items():
-                at = self._tidwrapper(v['awayteam'])
-                ht = self._tidwrapper(v['hometeam'])
-                irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
+        games = self._fetchgames(filt=False)
+        if not games:
+            irc.reply("ERROR: Fetching games.")
+            return
+        for (k, v) in games.items():
+            at = self._tidwrapper(v['awayteam'])
+            ht = self._tidwrapper(v['hometeam'])
+            irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
 
     cfbgames = wrap(cfbgames)
-
-    def cfblivestatus(self, irc, msg, args):
-        """
-        Debug function to help us out.
-        """
-
-        irc.reply("NEXTCHECK: {0}".format(self.nextcheck))
-        irc.reply("RANKINGS: {0}".format(self.rankings))
-        irc.reply("TEST: {0}".format([v for (k, v) in self.channels.items()]))
-        if self.games:
-            if len(self.channels) != 0: # consolidate the sets from each active channel.
-                activeconfs = set(chain.from_iterable(([v for (k, v) in self.channels.items()])))
-            else:  # just grab FBS ids if not.
-                activeconfs = set(self._fbsconfs())
-            # if we don't have channels, should we default to all FBS?
-            for (k, v) in self.games.items():
-                # this requires the team be in our db. tidstoconfids = failsafe function if not in DB?
-                teamidslist = self._tidstoconfids(v['awayteam'], v['hometeam'])  # grab the list of conf ids for this game.
-                if teamidslist:  # failsafe here.
-                    if not activeconfs.isdisjoint(teamidslist):
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
-                        irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
-                    else:
-                        at = self._tidwrapper(v['awayteam'])
-                        ht = self._tidwrapper(v['hometeam'])
-                        irc.reply("NOT IN :: {0} v. {1} :: {2}".format(at, ht, v))
-
-    cfblivestatus = wrap(cfblivestatus)
 
     def checkcfb(self, irc):
     #def checkcfb(self, irc, msg, args):
@@ -766,7 +762,7 @@ class CFBLive(callbacks.Plugin):
         # done checking. copy new to self.games
         self.games = games2 # change status.
         # last, before we reset to check again, we need to verify some states of games in order to set sentinel or not.
-        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final
+        # STATUSES :: D = Delay, P = Playing, S = Future Game, F = Final, O = PPD
         # first, we grab all the statuses in newgames (games2)
         gamestatuses = set([i['status'] for i in games2.values()])
         self.log.info("GAMESTATUSES: {0}".format(gamestatuses))
