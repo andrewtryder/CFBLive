@@ -203,7 +203,7 @@ INSERT INTO teams VALUES ("93", "2537", "Texas Lutheran", "");
 INSERT INTO confs VALUES ("2", "13", "Big Sky");
 INSERT INTO teams VALUES ("13", "108", "Cal Poly", "cca");
 INSERT INTO teams VALUES ("13", "113", "Eastern Wash.", "eeg");
-INSERT INTO teams VALUES ("13", "115", "Idaho St. ", "iib");
+INSERT INTO teams VALUES ("13", "115", "Idaho St.", "iib");
 INSERT INTO teams VALUES ("13", "116", "Montana", "mmu");
 INSERT INTO teams VALUES ("13", "117", "Montana St.", "mmv");
 INSERT INTO teams VALUES ("14", "308", "North Dakota", "nno");
