@@ -105,7 +105,7 @@ INSERT INTO teams VALUES ("11", "97", "Army", "aaq");
 INSERT INTO teams VALUES ("11", "88", "BYU", "bbi");
 INSERT INTO teams VALUES ("11", "114", "Idaho", "iia");
 INSERT INTO teams VALUES ("11", "102", "Navy", "nna");
-INSERT INTO teams VALUES ("10", "41", "N.M. State", "nni");
+INSERT INTO teams VALUES ("11", "41", "N.M. State", "nni");
 INSERT INTO teams VALUES ("11", "104", "Notre Dame", "nnx");
 INSERT INTO teams VALUES ("11", "2371", "Old Dominion", "oah");
 
