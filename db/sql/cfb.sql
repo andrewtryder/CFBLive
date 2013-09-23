@@ -226,17 +226,18 @@ INSERT INTO teams VALUES ("92", "178", "VMI", "vve");
 
 -- CAA
 INSERT INTO confs VALUES ("2", "98", "CAA");
-INSERT INTO teams VALUES ("73", "546", "Albany", "aag");
-INSERT INTO teams VALUES ("73", "195", "Delaware", "ddc");
-INSERT INTO teams VALUES ("73", "196", "JMU", "jjb");
-INSERT INTO teams VALUES ("73", "203", "Maine", "mma");
-INSERT INTO teams VALUES ("73", "205", "New Hampshire", "nng");
-INSERT INTO teams VALUES ("73", "206", "Rhode Island", "rra");
-INSERT INTO teams VALUES ("73", "198", "Richmond", "rrc");
-INSERT INTO teams VALUES ("73", "629", "Stony Brook", "sbf");
-INSERT INTO teams VALUES ("73", "221", "Towson", "ttq");
-INSERT INTO teams VALUES ("73", "199", "Villanova", "vvh");
-INSERT INTO teams VALUES ("73", "200", "William & Mary", "wwn");
+INSERT INTO teams VALUES ("98", "195", "Delaware", "ddc");
+INSERT INTO teams VALUES ("98", "214", "Hofstra", "ddc");
+INSERT INTO teams VALUES ("98", "196", "JMU", "jjb");
+INSERT INTO teams VALUES ("98", "203", "Maine", "mma");
+INSERT INTO teams VALUES ("98", "205", "New Hampshire", "nng");
+INSERT INTO teams VALUES ("98", "197", "Northeastern", "nng");
+INSERT INTO teams VALUES ("98", "206", "Rhode Island", "rra");
+INSERT INTO teams VALUES ("98", "198", "Richmond", "rrc");
+INSERT INTO teams VALUES ("98", "629", "Stony Brook", "sbf");
+INSERT INTO teams VALUES ("98", "221", "Towson", "ttq");
+INSERT INTO teams VALUES ("98", "199", "Villanova", "vvh");
+INSERT INTO teams VALUES ("98", "200", "William & Mary", "wwn");
 
 -- Cascade Collegiate Conference
 INSERT INTO confs VALUES ("2", "103", "Cascade Collegiate");
@@ -270,7 +271,6 @@ INSERT INTO confs VALUES ("2", "74", "FCS Independents");
 INSERT INTO teams VALUES ("74", "276", "Abilene Christian", "");
 INSERT INTO teams VALUES ("74", "2595", "Charlotte", "nad");
 INSERT INTO teams VALUES ("74", "2601", "Houston Baptist", "");
-INSERT INTO teams VALUES ("74", "216", "Monmouth", "mae");
 INSERT INTO teams VALUES ("74", "2539", "Incarnate Word", "");
 INSERT INTO teams VALUES ("74", "2461", "Lake Erie College", "");
 INSERT INTO teams VALUES ("74", "2349", "N.C. Pembroke", "");
@@ -444,9 +444,11 @@ INSERT INTO teams VALUES ("53", "499", "Wooster", "");
 
 -- Northeast
 INSERT INTO confs VALUES ("2", "73", "Northeast");
+INSERT INTO teams VALUES ("73", "546", "Albany", "aag");
 INSERT INTO teams VALUES ("73", "1948", "Bryant", "bvx");
 INSERT INTO teams VALUES ("73", "209", "Central Conn. St.", "cce");
 INSERT INTO teams VALUES ("73", "136", "Duquesne", "ddi");
+INSERT INTO teams VALUES ("73", "216", "Monmouth", "mae");
 INSERT INTO teams VALUES ("73", "217", "Robert Morris", "rri");
 INSERT INTO teams VALUES ("73", "259", "Sacred Heart", "sbe");
 INSERT INTO teams VALUES ("73", "219", "St. Francis (PA)", "sps");
