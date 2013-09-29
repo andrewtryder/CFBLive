@@ -164,9 +164,9 @@ class CFBLive(callbacks.Plugin):
             return False
         return True
 
-    #########################
-    # TEAM DB AND FUNCTIONS #
-    #########################
+    ##################################
+    # TEAM DB AND DATABASE FUNCTIONS #
+    ##################################
 
     def _tidwrapper(self, tid, d=False):
         """TeamID wrapper."""
@@ -487,35 +487,61 @@ class CFBLive(callbacks.Plugin):
     # CHANNEL MANAGEMENT #
     ######################
 
-    def cfbstart(self, irc, msg, args):
+    def cfbliveon(self, irc, msg, args):
         """
-        start or restart the CFBLive timer and live reporting.
+        Re-enable CFBLive updates in channel.
+        Must be enabled by an op in the channel scores are already enabled for.
         """
 
-        def checkcfbcron():
-            self.checkcfb(irc)
+        # channel
+        channel = channel.lower()
+        # check if op.
+        if not irc.state.channels[channel].isOp(msg.nick):
+            irc.reply("ERROR: You must be an op in this channel for this command to work.")
+            return
+        # check if channel is already on.
+        if channel in self.channels:
+            irc.reply("ERROR: {0} is already enabled for CFBLive updates.".format(channel))
+        # we're here if it's not. let's re-add whatever we have saved.
+        # most of this is from _loadchannels
         try:
-            schedule.addPeriodicEvent(checkcfbcron, 30, now=False, name='checkcfb')
-        except AssertionError:
-            irc.reply("The CFBLive checker was already running.")
+            datafile = open(conf.supybot.directories.data.dirize(self.name()+".pickle"), 'rb')
+            try:
+                dataset = pickle.load(datafile)
+            finally:
+                datafile.close()
+        except IOError:
+            irc.reply("ERROR: I could not open the CFBLive pickle to restore. Something went horribly wrong.")
+            return
+        # now check if channels is in the dataset from the pickle.
+        if channel in dataset['channels']:  # it is. we're good.
+            self.channels[channel] = dataset['channels'][channel]  # restore it.
         else:
-            irc.reply("CFBLive checker started.")
+            irc.reply("ERROR: {0} is not in the saved channel list. Please use cfbchannel to add it.".format(channel))
 
-    cfbstart = wrap(cfbstart, [('checkCapability', 'admin')])
+    cfbstart = wrap(cfbstart, [('channel')])
 
-    def cfbstop(self, irc, msg, args):
+    def cfbliveoff(self, irc, msg, args):
         """
-        start or restart the CFBLive timer and live reporting.
+        Disable CFBLive scoring updates in a channel.
+        Must be issued by an op in a channel it is enabled for.
         """
 
-        try:
-            schedule.removeEvent('checkcfb')
-        except KeyError:
-            irc.reply("The CFBLive checker was not running.")
-        else:
-            irc.reply("CFBLive checker stopped.")
+        # channel
+        channel = channel.lower()
+        # check if op.
+        if not irc.state.channels[channel].isOp(msg.nick):
+            irc.reply("ERROR: You must be an op in this channel for this command to work.")
+            return
+        # check if channel is already on.
+        if channel not in self.channels:
+            irc.reply("ERROR: {0} is not in self.channels. I can't disable updates for a channel I don't update in.".format(channel))
+            return
+        else:  # channel is in the dict so lets do a temp disable by deleting it.
+            del self.channels[channel]
+            irc.reply("I have successfully disabled cfblive updates in {0}".format(channel))
 
-    cfbstop = wrap(cfbstop, [('checkCapability', 'admin')])
+    cfbstop = wrap(cfbstop, [('channel')])
 
     def cfbchannel(self, irc, msg, args, op, optchannel, optarg):
         """<add|list|del|confs> <#channel> <CONFERENCE>
