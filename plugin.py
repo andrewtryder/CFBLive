@@ -519,7 +519,7 @@ class CFBLive(callbacks.Plugin):
         else:
             irc.reply("ERROR: {0} is not in the saved channel list. Please use cfbchannel to add it.".format(channel))
 
-    cfbstart = wrap(cfbstart, [('channel')])
+    cfbliveon = wrap(cfbliveon, [('channel')])
 
     def cfbliveoff(self, irc, msg, args):
         """
@@ -541,7 +541,7 @@ class CFBLive(callbacks.Plugin):
             del self.channels[channel]
             irc.reply("I have successfully disabled cfblive updates in {0}".format(channel))
 
-    cfbstop = wrap(cfbstop, [('channel')])
+    cfbliveoff = wrap(cfbliveoff, [('channel')])
 
     def cfbchannel(self, irc, msg, args, op, optchannel, optarg):
         """<add|list|del|confs> <#channel> <CONFERENCE>
