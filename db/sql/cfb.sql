@@ -371,6 +371,22 @@ INSERT INTO teams VALUES ("15", "132", "Pennsylvania", "ppc");
 INSERT INTO teams VALUES ("15", "133", "Princeton", "pph");
 INSERT INTO teams VALUES ("15", "134", "Yale", "yya");
 
+-- Lone Star
+INSERT INTO confs VALUES ("2", "28", "Lone Star");
+-- INSERT INTO teams VALUES ("28", "276", "Abilene Christian", "");
+INSERT INTO teams VALUES ("28", "277", "Angelo St.", "");
+INSERT INTO teams VALUES ("28", "278", "Cent. Oklahoma", "");
+INSERT INTO teams VALUES ("28", "2309", "E. Central", "");
+INSERT INTO teams VALUES ("28", "280", "Eastern N.M.", "");
+INSERT INTO teams VALUES ("28", "369", "Midwestern St.", "");
+INSERT INTO teams VALUES ("28", "2299", "Northeastern St.", "");
+INSERT INTO teams VALUES ("28", "1386", "Southeastern O.K.", "");
+INSERT INTO teams VALUES ("28", "1814", "Southwestern O.K. St.", "");
+INSERT INTO teams VALUES ("28", "262", "Tarleton St.", "");
+INSERT INTO teams VALUES ("28", "279", "TA&M-Commerce", "");
+INSERT INTO teams VALUES ("28", "617", "TA&M-Kingsville", "");
+INSERT INTO teams VALUES ("28", "265", "W. Texas A&M", "");
+
 -- MEAC
 INSERT INTO confs VALUES ("2", "17", "MEAC");
 INSERT INTO teams VALUES ("17", "143", "Bethune-Cookman", "bbc");
@@ -384,6 +400,19 @@ INSERT INTO teams VALUES ("17", "233", "Norfolk St.", "nan");
 INSERT INTO teams VALUES ("17", "148", "NC A&T", "nnm");
 INSERT INTO teams VALUES ("17", "363", "Savannah St.", "ssx");
 INSERT INTO teams VALUES ("17", "149", "SCarolina St.", "ssj");
+
+-- MID-AMERICA INTERCOLLEGIATE ATHLETICS ASSOCIATION
+INSERT INTO confs VALUES ("2", "29", "M-A IAA");
+INSERT INTO teams VALUES ("29", "282", "Cent. Missouri St.", "");
+INSERT INTO teams VALUES ("29", "283", "Emporia St.", "");
+INSERT INTO teams VALUES ("29", "342", "Fort Hays St.", "");
+INSERT INTO teams VALUES ("29", "285", "Missouri Southern St.", "");
+INSERT INTO teams VALUES ("29", "286", "Missouri Western St.", "");
+INSERT INTO teams VALUES ("29", "307", "Nebraska-Omaha", "");
+INSERT INTO teams VALUES ("29", "288", "Northwest Missouri St.", "");
+INSERT INTO teams VALUES ("29", "289", "Pittsburg St.", ""); -- Mid-America Intercollegiate Athletics Association
+INSERT INTO teams VALUES ("29", "287", "Truman St.", "");
+INSERT INTO teams VALUES ("29", "291", "Washburn", "");
 
 -- Mid-South Conference
 INSERT INTO confs VALUES ("2", "68", "Mid-South");
@@ -596,3 +625,4 @@ INSERT INTO teams VALUES ("23", "584", "Tufts", "");  -- NONE?
 INSERT INTO teams VALUES ("23", "2602", "Florida Tech", ""); -- ?
 INSERT INTO teams VALUES ("23", "2358", "Birmingham-Southern", ""); -- Southern Collegiate Athletic
 INSERT INTO teams VALUES ("23", "2600", "Berry", ""); -- Southern Collegiate Athletic
+INSERT INTO teams VALUES ("23", "2593", "Point Univ.", ""); -- Independents (NAIA-II)
