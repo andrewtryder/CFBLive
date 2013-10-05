@@ -483,6 +483,15 @@ class CFBLive(callbacks.Plugin):
                 self.log.error("_rankings: AP ERROR: {0}".format(e))
                 self.rankingstimer = utcnow+60  # rerun in one minute.
 
+    def _gctosec(self, s):
+        """Convert seconds of clock into an integer of seconds remaining."""
+
+        if ':' in s:
+            l = s.split(':')
+            return int(int(l[0]) * 60 + int(l[1]))
+        else:
+            return int(round(float(s)))
+
     ######################
     # CHANNEL MANAGEMENT #
     ######################
@@ -706,6 +715,20 @@ class CFBLive(callbacks.Plugin):
                         else:  # scoring event did not work. just post a generic string. this could be buggy.
                             mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, ircutils.bold(setype), seteam, scoretime)
                             self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
+                    # UPSET ALERT. CHECKS ONLY IN 4TH QUARTER AT 2 MINUTE MARK.
+                    #if ((games2[k]['quarter'] == "4") and (v['time'] != games2[k]['time']) and (self._gctosec(v['time']) >= 120) and self._gctosec(games2[k]['time'] < 120)):
+                    #    self.log.info("Should fire upset alert in {0}".format(k))
+                    #    # now we need to check if either team is ranked.
+                    #    at = self._tidwrapper(v['awayteam'], d=True)  # fetch visitor.
+                    #    ht = self._tidwrapper(v['hometeam'], d=True)  # fetch home.
+                    #    # now we need to check if there is a ranking.
+                    #    if (('rank' in at) or ('rank' in ht)):  # we have ranking. must have this to check.
+                    #        awayscore = games2[k]['awayscore']
+                    #        homescore = games2[k]['homescore']
+                    #        # we must check if the "higher" team is losing or if the game is close.
+                    #        # now we must check if the ranked team is losing, or the team ranked higher is losing.
+                    #        #gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
+                    #        pass
                     # END OF 1ST AND 3RD QUARTER.
                     if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] in ("1", "3")) and (games2[k]['time'] == "0:00")):
                         self.log.info("Should end of quarter in {0}".format(k))
