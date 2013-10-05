@@ -4,7 +4,7 @@ import urllib2
 from BeautifulSoup import BeautifulSoup
 import sys
 
-_cfbdb = 'cfb.db'
+_cfbdb = '/home/spline/supybot/plugins/CFBLive/db/cfb.db'
 
 def existingids():
     with sqlite3.connect(_cfbdb) as conn:
@@ -47,17 +47,30 @@ def _ft(tid):
     soup = BeautifulSoup(html)
     tn = soup.find('div', attrs={'class':'uic title first'})
     if tn:
-        return tn.getText()
+        team = tn.getText()
+    else:
+        team = None
+
+    conf = soup.find('div', attrs={'class':'uic last'})
+    if conf:
+        cn = conf.getText()
+        confnum = conf.find('a')['href'].split('?')[0]
+        confnum=''.join(i for i in confnum if i.isdigit())
+    else:
+        conf = None
+
+    if team and conf:
+        return team, cn, confnum
     else:
         return None
 
-
 existing = existingids()
 missing = find_missing_items(existing)
-# missing is now a list of ids not in the database.
-print missing
-print len(missing)
-
-tid = sys.argv[1]
-bb = _ft(tid)
-print bb
+for m in missing:
+    if m < 1956:
+        continue
+    mm = _ft(m)
+    if mm:
+        print 'INSERT INTO teams VALUES ("{0}", "{1}", "{2}", ""); -- {3}'.format(mm[2], m, mm[0], mm[1])
+    else:
+        print "{0} came back empty/wrong".format(m)
