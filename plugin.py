@@ -716,19 +716,49 @@ class CFBLive(callbacks.Plugin):
                             mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, ircutils.bold(setype), seteam, scoretime)
                             self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
                     # UPSET ALERT. CHECKS ONLY IN 4TH QUARTER AT 2 MINUTE MARK.
-                    #if ((games2[k]['quarter'] == "4") and (v['time'] != games2[k]['time']) and (self._gctosec(v['time']) >= 120) and self._gctosec(games2[k]['time'] < 120)):
-                    #    self.log.info("Should fire upset alert in {0}".format(k))
-                    #    # now we need to check if either team is ranked.
-                    #    at = self._tidwrapper(v['awayteam'], d=True)  # fetch visitor.
-                    #    ht = self._tidwrapper(v['hometeam'], d=True)  # fetch home.
-                    #    # now we need to check if there is a ranking.
-                    #    if (('rank' in at) or ('rank' in ht)):  # we have ranking. must have this to check.
-                    #        awayscore = games2[k]['awayscore']
-                    #        homescore = games2[k]['homescore']
-                    #        # we must check if the "higher" team is losing or if the game is close.
-                    #        # now we must check if the ranked team is losing, or the team ranked higher is losing.
-                    #        #gamestr = self._boldleader(at, games2[k]['awayscore'], ht, games2[k]['homescore'])
-                    #        pass
+                    if ((games2[k]['quarter'] == "4") and (v['time'] != games2[k]['time']) and (self._gctosec(v['time']) >= 120) and self._gctosec(games2[k]['time'] < 120)):
+                        self.log.info("Should fire upset alert in {0}".format(k))
+                        # fetch teams with ranking in dict so we can determine if there is a potential upset on hand.
+                        at = self._tidwrapper(v['awayteam'], d=True)  # fetch visitor.
+                        ht = self._tidwrapper(v['hometeam'], d=True)  # fetch home.
+                        # now we need to check if there is a ranking in either or both teams and
+                        # act properly depending on the rank + score.
+                        if (('rank' in at) or ('rank' in ht)):  # require ranking. 3 scenarios: at ranked, ht ranked, both ranked.
+                            awayscore = games2[k]['awayscore']  # grab the score.
+                            homescore = games2[k]['homescore']
+                            scorediff =  abs(awayscore-homescore)  # abs on the diff.
+                            upsetalert, potentialupsetalert, upsetstr = False, False, None  # defaults.
+                            if (('rank' in at) and ('rank' not in ht)):  # away team ranked, home team is not.
+                                if homescore > awayscore:  # ranked awayteam is losing.
+                                    upsetalert = True
+                                elif scorediff < 9:  # score is within a single possession.
+                                    potentialupsetalert = True
+                            elif (('rank' not in at) and ('rank' in ht)):  # home team ranked, away is not.
+                                if awayscore > homescore:  # ranked hometeam is losing.
+                                    upsetalert = True
+                                elif scorediff < 9:  # score is within a single possession.
+                                    potentialupsetalert = True
+                            else:  # both teams are ranked, so we have to check that is higher.
+                                if at['rank'] > ht['rank']:  # away team ranked higher.
+                                    if homescore > awayscore:  # home team is winning.
+                                        upsetalert = True
+                                    elif scorediff < 9:  # score is within a single possession.
+                                        potentialupsetalert = True
+                                elif ht['rank'] > at['rank']:  # home team is ranked higher.
+                                    if awayscore > homescore:  # away team is winning.
+                                        upsetalert = True
+                                    elif scorediff < 9:  # score is within a single possession.
+                                        potentialupsetalert = True
+                            # now that we're done, we check on upsetalert and potentialupsetalert to set upsetstr.
+                            if upsetalert:  # we have an upset alert.
+                                upsetstr = ircutils.bold("UPSET ALERT")
+                            elif potentialupsetalert:  # we have a potential upset.
+                                upsetstr = ircutils.bold("POTENTIAL UPSET ALERT")
+                            # should we fire?
+                            if upsetstr:  # this was set above if conditions were met. so lets get our std gamestr, w/score, add the string, and post.
+                                gamestr = self._boldleader(self._tidwrapper(v['awayteam']), games2[k]['awayscore'], self._tidwrapper(v['hometeam']), games2[k]['homescore'])
+                                mstr = "{0} :: {1}".format(gamestr, upsetstr)
+                                self._post(irc, v['awayteam'], v['hometeam'], mstr)
                     # END OF 1ST AND 3RD QUARTER.
                     if ((v['time'] != games2[k]['time']) and (games2[k]['quarter'] in ("1", "3")) and (games2[k]['time'] == "0:00")):
                         self.log.info("Should end of quarter in {0}".format(k))
