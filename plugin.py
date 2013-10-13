@@ -58,9 +58,14 @@ class CFBLive(callbacks.Plugin):
         # fill in the blanks.
         if not self.games:
             self.games = self._fetchgames()
-        # now schedule our events.
+        # setup the function for cron.
         def checkcfbcron():
-            self.checkcfb(irc)
+            try:
+                self.checkcfb(irc)
+            except Exception, e:  # something broke. The plugin will stop itself from reporting.
+                self.log.error("cron: ERROR :: {0}".format(e))
+                self.nextcheck = self._utcnow()+72000  # add some major delay so the plugin does not spam.
+        # and add the cronjob.
         try:  # add our cronjob.
             schedule.addPeriodicEvent(checkcfbcron, 30, now=True, name='checkcfb')
         except AssertionError:
@@ -193,10 +198,16 @@ class CFBLive(callbacks.Plugin):
                 else:  # no conf.
                     conf = "None"
                 self.log.info('_tidwrapper: INSERT INTO teams VALUES ("{0}", "{1}", "{2}", "");'.format(conf, tid, teamname))
-                return teamname.encode('utf-8')
+                if d:  # return as dict.
+                    return {'team': teamname.encode('utf-8')}
+                else:
+                    return teamname.encode('utf-8')
             else:  # didn't find the team. Gotta bail..
                 self.log.error("ERROR: _tidwrapper: Could not find teamname for tid: {0}".format(tid))
-                return "Unknown"
+                if d:
+                    return {'team': 'Unknown'}
+                else:
+                    return "Unknown"
 
     def _tidtoname(self, tid, d=False):
         """Return team name for teamid from database. Use d=True to return as dict."""
@@ -206,17 +217,17 @@ class CFBLive(callbacks.Plugin):
             cursor.execute("SELECT team, tid FROM teams WHERE id=?", (tid,))
             row = cursor.fetchone()
         # now return the name.
-        if not row:  # didn't find.
+        if not row:  # didn't find. we just return None here.
             return None
         else:  # did find.
             if row[1] != '':  # some are empty. we did get something back.
-                # check if team is in rankings dict.
-                if row[1] in self.rankings:  # in there so append the #.
+                # check if we have rankings and team is in rankings dict.
+                if ((self.rankings) and (row[1] in self.rankings)):  # in there so append the #.
                     if d:  # return as dict.
                         return {'rank':self.rankings[row[1]], 'team':row[0].encode('utf-8')}
                     else:  # normal return
                         return "({0}){1}".format(self.rankings[row[1]], row[0].encode('utf-8'))
-                else:  # not in the table so just return the teamname.
+                else:  # no rankings or not in the table so just return the teamname.
                     if d: # return as dict.
                         return {'team': row[0].encode('utf-8')}
                     else:  # normal return
@@ -486,12 +497,15 @@ class CFBLive(callbacks.Plugin):
     def _gctosec(self, s):
         """Convert seconds of clock into an integer of seconds remaining."""
 
-        if ':' in s:
-            l = s.split(':')
-            return int(int(l[0]) * 60 + int(l[1]))
+        #self.log.info("S IS: {0} AND TYPE: {1}".format(s, type(s)))
+        if isinstance(s, str):
+            if ':' in s:
+                l = s.split(':')
+                return int(int(l[0]) * 60 + int(l[1]))
+            else:
+                return int(round(float(s)))
         else:
-            return int(round(float(s)))
-
+            return s
     ######################
     # CHANNEL MANAGEMENT #
     ######################
@@ -544,7 +558,7 @@ class CFBLive(callbacks.Plugin):
             return
         # check if channel is already on.
         if channel not in self.channels:
-            irc.reply("ERROR: {0} is not in self.channels. I can't disable updates for a channel I don't update in.".format(channel))
+            irc.reply("ERROR: {0} is not in self.channels. I can't disable updates for a channel I don't have configured.".format(channel))
             return
         else:  # channel is in the dict so lets do a temp disable by deleting it.
             del self.channels[channel]
@@ -693,7 +707,7 @@ class CFBLive(callbacks.Plugin):
                             seteam = ht['team']  # get awayteam.
                         # figure out the scoretype.
                         setype = self._scoretype(sediff)  # figure out score type.
-                        # first, we need to reconstruct at/ht as a string. since we called tidwrapper with d=True, we have to reattach the ranking, if present.
+                        # we need to reconstruct at/ht as a string. since we called tidwrapper with d=True, we have to reattach the ranking, if present.
                         if 'rank' in at:  # we have rank so (#)Team.
                             at = "({0}){1}".format(at['rank'], at['team'])
                         else:  # no rank.
@@ -715,47 +729,56 @@ class CFBLive(callbacks.Plugin):
                         else:  # scoring event did not work. just post a generic string. this could be buggy.
                             mstr = "{0} :: {1} :: {2} ({3})".format(gamestr, ircutils.bold(setype), seteam, scoretime)
                             self._post(irc, v['awayteam'], v['hometeam'], mstr)  # post to irc.
-                    # UPSET ALERT. CHECKS ONLY IN 4TH QUARTER AT 2 MINUTE MARK.
-                    if ((games2[k]['quarter'] == "4") and (v['time'] != games2[k]['time']) and (self._gctosec(v['time']) >= 120) and self._gctosec(games2[k]['time'] < 120)):
-                        self.log.info("Should fire upset alert in {0}".format(k))
+                    # UPSET ALERT. CHECKS ONLY IN 3RD/4TH QUARTER AT 2 MINUTE MARK.
+                    if ((games2[k]['quarter'] in ("3", "4")) and (v['time'] != games2[k]['time']) and (self._gctosec(v['time']) >= 120) and (self._gctosec(games2[k]['time']) < 120)):
+                        #self.log.info("inside upset alert {0}".format(k))
                         # fetch teams with ranking in dict so we can determine if there is a potential upset on hand.
                         at = self._tidwrapper(v['awayteam'], d=True)  # fetch visitor.
                         ht = self._tidwrapper(v['hometeam'], d=True)  # fetch home.
                         # now we need to check if there is a ranking in either or both teams and
                         # act properly depending on the rank + score.
                         if (('rank' in at) or ('rank' in ht)):  # require ranking. 3 scenarios: at ranked, ht ranked, both ranked.
+                            #self.log.info("2nd upset alert in {0}".format(k))
                             awayscore = games2[k]['awayscore']  # grab the score.
                             homescore = games2[k]['homescore']
-                            scorediff =  abs(awayscore-homescore)  # abs on the diff.
+                            scorediff =  abs(awayscore-homescore)  # abs on the points diff.
                             upsetalert, potentialupsetalert, upsetstr = False, False, None  # defaults.
                             if (('rank' in at) and ('rank' not in ht)):  # away team ranked, home team is not.
+                                #self.log.info("rank in at not ht {0}".format(k))
                                 if homescore > awayscore:  # ranked awayteam is losing.
                                     upsetalert = True
-                                elif scorediff < 9:  # score is within a single possession.
-                                    potentialupsetalert = True
+                                else:
+                                    if scorediff < 9:  # score is within a single possession.
+                                        potentialupsetalert = True
                             elif (('rank' not in at) and ('rank' in ht)):  # home team ranked, away is not.
+                                #self.log.info("rank in ht not at {0}".format(k))
                                 if awayscore > homescore:  # ranked hometeam is losing.
                                     upsetalert = True
-                                elif scorediff < 9:  # score is within a single possession.
-                                    potentialupsetalert = True
-                            else:  # both teams are ranked, so we have to check that is higher.
-                                if at['rank'] > ht['rank']:  # away team ranked higher.
+                                else:
+                                    if scorediff < 9:  # score is within a single possession.
+                                        potentialupsetalert = True
+                            else:  # both teams are ranked, so we have to check what team is ranked higher and act accordingly.
+                                #self.log.info("both teams ranked {0}".format(k))
+                                if at['rank'] < ht['rank']:  # away team ranked higher. (lower is higher)
                                     if homescore > awayscore:  # home team is winning.
                                         upsetalert = True
-                                    elif scorediff < 9:  # score is within a single possession.
-                                        potentialupsetalert = True
-                                elif ht['rank'] > at['rank']:  # home team is ranked higher.
+                                    else:
+                                        if scorediff < 9:  # score is within a single possession.
+                                            potentialupsetalert = True
+                                else:  # home team is ranked higher. (lower is higher)
                                     if awayscore > homescore:  # away team is winning.
                                         upsetalert = True
-                                    elif scorediff < 9:  # score is within a single possession.
-                                        potentialupsetalert = True
+                                    else:
+                                        if scorediff < 9:  # score is within a single possession.
+                                            potentialupsetalert = True
                             # now that we're done, we check on upsetalert and potentialupsetalert to set upsetstr.
                             if upsetalert:  # we have an upset alert.
-                                upsetstr = ircutils.bold("UPSET ALERT")
+                                upsetstr = ircutils.bold("AT&T UPSET ALERT")
                             elif potentialupsetalert:  # we have a potential upset.
-                                upsetstr = ircutils.bold("POTENTIAL UPSET ALERT")
+                                upsetstr = ircutils.bold("POTENTIAL AT&T UPSET ALERT")
                             # should we fire?
                             if upsetstr:  # this was set above if conditions were met. so lets get our std gamestr, w/score, add the string, and post.
+                                self.log.info("SHOULD BE POSTING ACTUAL UPSET ALERT STRING FROM {0}".format(k))
                                 gamestr = self._boldleader(self._tidwrapper(v['awayteam']), games2[k]['awayscore'], self._tidwrapper(v['hometeam']), games2[k]['homescore'])
                                 mstr = "{0} :: {1}".format(gamestr, upsetstr)
                                 self._post(irc, v['awayteam'], v['hometeam'], mstr)
