@@ -631,21 +631,21 @@ class CFBLive(callbacks.Plugin):
     # PUBLIC COMMANDS #
     ###################
 
-    def cfbgames(self, irc, msg, args):
-        """
-        Display all current games in the self.games
-        """
-
-        games = self._fetchgames(filt=False)
-        if not games:
-            irc.reply("ERROR: Fetching games.")
-            return
-        for (k, v) in games.items():
-            at = self._tidwrapper(v['awayteam'])
-            ht = self._tidwrapper(v['hometeam'])
-            irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
-
-    cfbgames = wrap(cfbgames)
+    #def cfbgames(self, irc, msg, args):
+    #    """
+    #    Display all current games in the self.games
+    #    """
+    #
+    #    games = self._fetchgames(filt=False)
+    #    if not games:
+    #        irc.reply("ERROR: Fetching games.")
+    #        return
+    #    for (k, v) in games.items():
+    #        at = self._tidwrapper(v['awayteam'])
+    #        ht = self._tidwrapper(v['hometeam'])
+    #        irc.reply("{0} v. {1} :: {2}".format(at, ht, v))
+    #
+    #cfbgames = wrap(cfbgames)
 
     def checkcfb(self, irc):
     #def checkcfb(self, irc, msg, args):
@@ -659,6 +659,7 @@ class CFBLive(callbacks.Plugin):
         if self.nextcheck:  # set
             utcnow = self._utcnow()
             if self.nextcheck > utcnow:  # in the future so we backoff.
+                self.log.info("checkcfb: nextcheck is in {0}s".format(self.nextcheck-utcnow))
                 return
             else:  # in the past so lets reset it. this means that we've reached the time where firstgametime should begin.
                 self.log.info("checkcfb: nextcheck has passed. we are resetting and continuing normal operations.")
