@@ -774,9 +774,9 @@ class CFBLive(callbacks.Plugin):
                                             potentialupsetalert = True
                             # now that we're done, we check on upsetalert and potentialupsetalert to set upsetstr.
                             if upsetalert:  # we have an upset alert.
-                                upsetstr = ircutils.bold("AT&T UPSET ALERT")
+                                upsetstr = ircutils.bold("PEPTO-BISMOL UPSET ALERT")
                             elif potentialupsetalert:  # we have a potential upset.
-                                upsetstr = ircutils.bold("POTENTIAL AT&T UPSET ALERT")
+                                upsetstr = ircutils.bold("POTENTIAL PEPTO-BISMOL UPSET ALERT")
                             # should we fire?
                             if upsetstr:  # this was set above if conditions were met. so lets get our std gamestr, w/score, add the string, and post.
                                 self.log.info("SHOULD BE POSTING ACTUAL UPSET ALERT STRING FROM {0}".format(k))
