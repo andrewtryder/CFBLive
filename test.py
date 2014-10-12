@@ -7,7 +7,7 @@
 
 from supybot.test import *
 
-class CFBLiveTestCase(PluginTestCase):
+class CFBLiveTestCase(ChannelPluginTestCase):
     plugins = ('CFBLive',)
 
     def testCFBLive(self):
