@@ -11,8 +11,8 @@ class CFBLiveTestCase(PluginTestCase):
     plugins = ('CFBLive',)
 
     def testCFBLive(self):
-        self.assertRegexp('cfbchannel add #test SEC', 'I have added SEC into #test')
-        self.assertRegexp('cfbchannel del #test SEC', 'I have successfully removed SEC from #test')
+        self.assertError('cfbchannel add #test SEC', 'I have added SEC into #test')
+        self.assertError('cfbchannel del #test SEC', 'I have successfully removed SEC from #test')
 
     
 
